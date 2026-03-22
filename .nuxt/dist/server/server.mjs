@@ -1,0 +1,1 @@
+export { default } from "file:///Users/miguel/dev/projects/web/therapy-web/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs"

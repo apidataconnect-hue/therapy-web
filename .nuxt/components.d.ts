@@ -15,6 +15,18 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 
 
 export const HelloWorld: typeof import("../app/components/HelloWorld.vue")['default']
+export const BaseActionBar: typeof import("../app/components/base/ActionBar.vue")['default']
+export const BaseDialog: typeof import("../app/components/base/BaseDialog.vue")['default']
+export const BaseCalendarEventChip: typeof import("../app/components/base/CalendarEventChip.vue")['default']
+export const BaseDataTableWrapper: typeof import("../app/components/base/DataTableWrapper.vue")['default']
+export const BaseEmptyState: typeof import("../app/components/base/EmptyState.vue")['default']
+export const BaseFormSection: typeof import("../app/components/base/FormSection.vue")['default']
+export const BaseNotificationSnackbar: typeof import("../app/components/base/NotificationSnackbar.vue")['default']
+export const BasePageHeader: typeof import("../app/components/base/PageHeader.vue")['default']
+export const BaseSectionCard: typeof import("../app/components/base/SectionCard.vue")['default']
+export const BaseStatsCard: typeof import("../app/components/base/StatsCard.vue")['default']
+export const BaseStatusChip: typeof import("../app/components/base/StatusChip.vue")['default']
+export const Base: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -31,7 +43,6 @@ export const NuxtPicture: typeof import("../node_modules/nuxt/dist/app/component
 export const NuxtPage: typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']
 export const NoScript: typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']
 export const Link: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']
-export const Base: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']
 export const Title: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Title']
 export const Meta: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Meta']
 export const Style: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Style']
@@ -40,6 +51,18 @@ export const Html: typeof import("../node_modules/nuxt/dist/head/runtime/compone
 export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const LazyHelloWorld: LazyComponent<typeof import("../app/components/HelloWorld.vue")['default']>
+export const LazyBaseActionBar: LazyComponent<typeof import("../app/components/base/ActionBar.vue")['default']>
+export const LazyBaseDialog: LazyComponent<typeof import("../app/components/base/BaseDialog.vue")['default']>
+export const LazyBaseCalendarEventChip: LazyComponent<typeof import("../app/components/base/CalendarEventChip.vue")['default']>
+export const LazyBaseDataTableWrapper: LazyComponent<typeof import("../app/components/base/DataTableWrapper.vue")['default']>
+export const LazyBaseEmptyState: LazyComponent<typeof import("../app/components/base/EmptyState.vue")['default']>
+export const LazyBaseFormSection: LazyComponent<typeof import("../app/components/base/FormSection.vue")['default']>
+export const LazyBaseNotificationSnackbar: LazyComponent<typeof import("../app/components/base/NotificationSnackbar.vue")['default']>
+export const LazyBasePageHeader: LazyComponent<typeof import("../app/components/base/PageHeader.vue")['default']>
+export const LazyBaseSectionCard: LazyComponent<typeof import("../app/components/base/SectionCard.vue")['default']>
+export const LazyBaseStatsCard: LazyComponent<typeof import("../app/components/base/StatsCard.vue")['default']>
+export const LazyBaseStatusChip: LazyComponent<typeof import("../app/components/base/StatusChip.vue")['default']>
+export const LazyBase: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
@@ -56,7 +79,6 @@ export const LazyNuxtPicture: LazyComponent<typeof import("../node_modules/nuxt/
 export const LazyNuxtPage: LazyComponent<typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']>
 export const LazyNoScript: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
 export const LazyLink: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']>
-export const LazyBase: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']>
 export const LazyTitle: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Title']>
 export const LazyMeta: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Meta']>
 export const LazyStyle: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Style']>

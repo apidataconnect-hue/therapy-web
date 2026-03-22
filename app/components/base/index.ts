@@ -1,0 +1,12 @@
+// Exporta todos los componentes base para importación global
+export { default as PageHeader } from './PageHeader.vue'
+export { default as SectionCard } from './SectionCard.vue'
+export { default as StatsCard } from './StatsCard.vue'
+export { default as EmptyState } from './EmptyState.vue'
+export { default as DataTableWrapper } from './DataTableWrapper.vue'
+export { default as StatusChip } from './StatusChip.vue'
+export { default as FormSection } from './FormSection.vue'
+export { default as ActionBar } from './ActionBar.vue'
+export { default as NotificationSnackbar } from './NotificationSnackbar.vue'
+export { default as BaseDialog } from './BaseDialog.vue'
+export { default as CalendarEventChip } from './CalendarEventChip.vue'
