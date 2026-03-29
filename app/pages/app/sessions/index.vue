@@ -7,8 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getPatientSessions } from '~/services/patientService'
+import { ref } from 'vue'
 
 const sessions = ref<any[]>([])
 const loading = ref(false)
@@ -18,14 +17,7 @@ const headers = [
   { text: 'Notas', value: 'notes' },
 ]
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    sessions.value = await getPatientSessions()
-  } finally {
-    loading.value = false
-  }
-})
+// TODO: implement when patient session service is available
 
 definePageMeta({
   middleware: ['auth', 'role'],

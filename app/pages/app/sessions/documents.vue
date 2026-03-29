@@ -8,7 +8,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getPatientDocuments } from '~/services/patientService'
 
 const documents = ref<any[]>([])
 const loading = ref(false)
@@ -19,12 +18,7 @@ const headers = [
 ]
 
 onMounted(async () => {
-  loading.value = true
-  try {
-    documents.value = await getPatientDocuments()
-  } finally {
-    loading.value = false
-  }
+  // TODO: implement when document service is available
 })
 
 definePageMeta({
