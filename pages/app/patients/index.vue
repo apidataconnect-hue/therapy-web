@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>Pacientes vinculados</h2>
+    <h2>Pacientes</h2>
     <NuxtLink to="/app/patients/invite">Invitar paciente</NuxtLink>
     <v-data-table
       :headers="headers"

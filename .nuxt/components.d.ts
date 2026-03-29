@@ -26,7 +26,11 @@ export const BasePageHeader: typeof import("../app/components/base/PageHeader.vu
 export const BaseSectionCard: typeof import("../app/components/base/SectionCard.vue")['default']
 export const BaseStatsCard: typeof import("../app/components/base/StatsCard.vue")['default']
 export const BaseStatusChip: typeof import("../app/components/base/StatusChip.vue")['default']
+export const BaseTagManager: typeof import("../app/components/base/TagManager.vue")['default']
 export const Base: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']
+export const CalendarPatientCalendar: typeof import("../app/components/calendar/PatientCalendar.vue")['default']
+export const CalendarTherapistCalendar: typeof import("../app/components/calendar/TherapistCalendar.vue")['default']
+export const NotificationsNotificationBar: typeof import("../app/components/notifications/NotificationBar.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -62,7 +66,11 @@ export const LazyBasePageHeader: LazyComponent<typeof import("../app/components/
 export const LazyBaseSectionCard: LazyComponent<typeof import("../app/components/base/SectionCard.vue")['default']>
 export const LazyBaseStatsCard: LazyComponent<typeof import("../app/components/base/StatsCard.vue")['default']>
 export const LazyBaseStatusChip: LazyComponent<typeof import("../app/components/base/StatusChip.vue")['default']>
+export const LazyBaseTagManager: LazyComponent<typeof import("../app/components/base/TagManager.vue")['default']>
 export const LazyBase: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Base']>
+export const LazyCalendarPatientCalendar: LazyComponent<typeof import("../app/components/calendar/PatientCalendar.vue")['default']>
+export const LazyCalendarTherapistCalendar: LazyComponent<typeof import("../app/components/calendar/TherapistCalendar.vue")['default']>
+export const LazyNotificationsNotificationBar: LazyComponent<typeof import("../app/components/notifications/NotificationBar.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>

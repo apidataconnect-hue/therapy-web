@@ -3,12 +3,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-12-21',
   devtools: { enabled: true },
 
-  // ssr: false,
-  modules: ['@nuxt/fonts', 'vuetify-nuxt-module', '@nuxt/eslint'],
+  ssr: false,
+  modules: ['@nuxt/fonts', 'vuetify-nuxt-module', '@nuxt/eslint', '@pinia/nuxt'],
 
   vuetify: {
     moduleOptions: {
-      styles: { configFile: 'assets/styles/settings.scss' },
+      styles: { configFile: 'app/assets/styles/settings.scss' },
     },
     vuetifyOptions: {
       theme: {
@@ -17,22 +17,63 @@ export default defineNuxtConfig({
           light: {
             dark: false,
             colors: {
-              primary: '#3A5A80',
-              secondary: '#6BA292',
-              background: '#F7F9FA',
-              surface: '#FFFFFF',
-              error: '#D14343',
-              warning: '#F7C873',
-              success: '#4BA37B',
-              info: '#4A90E2',
-              border: '#E0E3E8',
-              divider: '#F0F1F3',
-              hover: '#F2F6FA',
-              'text-main': '#25324B',
-              'text-secondary': '#6B7687',
-              disabled: '#B0B8C9',
+              // Principales
+              primary:   '#5B2A86',
+              secondary: '#9AC6C5',
+              // Superficie y fondo
+              background: '#F7F5FA',
+              surface:    '#FFFFFF',
+              // Semánticos
+              error:   '#C0392B',
+              warning: '#C77B2C',
+              success: '#2E8B57',
+              info:    '#7785AC',
+              // Extensiones custom
+              'primary-subtle':   '#F2EBF9',
+              'secondary-subtle': '#E4F5F4',
+              'on-surface-muted': '#9588A8',
+              border:   '#DDD8E8',
+              divider:  '#EDE9F4',
             },
           },
+        },
+      },
+      defaults: {
+        VBtn: {
+          style: 'letter-spacing: 0.01em; font-weight: 500;',
+          rounded: 'md',
+        },
+        VCard: {
+          elevation: 0,
+          rounded: 'lg',
+          border: true,
+        },
+        VTextField: {
+          variant: 'outlined',
+          density: 'comfortable',
+          rounded: 'md',
+          hideDetails: 'auto',
+        },
+        VSelect: {
+          variant: 'outlined',
+          density: 'comfortable',
+          rounded: 'md',
+          hideDetails: 'auto',
+        },
+        VTextarea: {
+          variant: 'outlined',
+          density: 'comfortable',
+          rounded: 'md',
+          hideDetails: 'auto',
+        },
+        VChip: {
+          rounded: 'md',
+        },
+        VDataTable: {
+          hover: true,
+        },
+        VDivider: {
+          color: '#DDE1E7',
         },
       },
     },
@@ -42,6 +83,15 @@ export default defineNuxtConfig({
     config: {
       import: {
         package: 'eslint-plugin-import-lite',
+      },
+    },
+  },
+
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: `${process.env.API_BASE_URL ?? 'http://localhost:8889'}/api`,
+        changeOrigin: true,
       },
     },
   },

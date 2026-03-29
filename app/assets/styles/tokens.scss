@@ -1,61 +1,98 @@
-// tokens.scss
-// Design tokens centralizados para therapy-web
+// tokens.scss — Sistema de diseño · therapy-web
 
-// PALETA DE COLOR
-$color-primary: #3A5A80;
-$color-secondary: #6BA292;
-$color-background: #F7F9FA;
-$color-surface: #FFFFFF;
-$color-error: #D14343;
-$color-warning: #F7C873;
-$color-success: #4BA37B;
-$color-info: #4A90E2;
+// ─── PALETA PRINCIPAL ────────────────────────────────────────────────────────
+$color-primary:          #5B2A86;  // Morado — acción principal
+$color-primary-light:    #7B4DAE;
+$color-primary-subtle:   #F2EBF9;
+$color-secondary:        #9AC6C5;  // Teal — acción secundaria
+$color-secondary-subtle: #E4F5F4;
 
-// NEUTRALES
-$color-border: #E0E3E8;
-$color-divider: #F0F1F3;
-$color-hover: #F2F6FA;
-$color-text-main: #25324B;
-$color-text-secondary: #6B7687;
-$color-disabled: #B0B8C9;
+// ─── SEMÁNTICOS ──────────────────────────────────────────────────────────────
+$color-success:          #2E8B57;
+$color-success-subtle:   #A5E6BA;
+$color-warning:          #C77B2C;
+$color-warning-subtle:   #FEF4E6;
+$color-error:            #C0392B;
+$color-error-subtle:     #FCECEA;
+$color-info:             #7785AC;
+$color-info-subtle:      #EAEdf5;
 
-// SPACING
-$space-0: 0;
+// ─── NEUTRALES ───────────────────────────────────────────────────────────────
+$color-background:     #F7F5FA;
+$color-surface:        #FFFFFF;
+$color-border:         #DDD8E8;
+$color-divider:        #EDE9F4;
+$color-hover:          #F0EAF9;
+$color-text-main:      #1A0A2E;
+$color-text-secondary: #5A4E70;
+$color-text-muted:     #9588A8;
+$color-disabled-text:  #B8AECE;
+$color-disabled-bg:    #F3F0F8;
+
+// ─── ROLES ───────────────────────────────────────────────────────────────────
+$color-therapist:        #5B2A86;  // Morado — acciones activas del terapeuta
+$color-therapist-subtle: #F2EBF9;
+$color-patient:          #9AC6C5;  // Teal — vistas de paciente (solo lectura)
+$color-patient-subtle:   #E4F5F4;
+$color-readonly-bg:      #F9F8FC;
+
+// ─── TIPOGRAFÍA ──────────────────────────────────────────────────────────────
+$font-family:         'Inter', 'Roboto', system-ui, sans-serif;
+$font-size-xs:        0.7rem;
+$font-size-sm:        0.8125rem;
+$font-size-base:      0.9375rem;
+$font-size-lg:        1.0625rem;
+$font-size-xl:        1.25rem;
+$font-size-2xl:       1.5rem;
+$font-size-3xl:       2rem;
+$font-weight-regular: 400;
+$font-weight-medium:  500;
+$font-weight-semibold:600;
+$font-weight-bold:    700;
+$line-height-tight:   1.25;
+$line-height-normal:  1.5;
+
+// ─── SPACING ─────────────────────────────────────────────────────────────────
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
 $space-4: 16px;
 $space-5: 24px;
 $space-6: 32px;
-$space-7: 40px;
+$space-7: 48px;
+$space-8: 64px;
 
-// BORDER RADIUS
-$radius-xs: 2px;
-$radius-sm: 4px;
-$radius-md: 8px;
-$radius-lg: 16px;
+// ─── BORDER RADIUS ───────────────────────────────────────────────────────────
+$radius-xs:   2px;
+$radius-sm:   4px;
+$radius-md:   8px;
+$radius-lg:   12px;
+$radius-xl:   16px;
+$radius-full: 9999px;
 
-// SOMBRAS
-$shadow-xs: 0 1px 2px 0 rgba(60,72,88,0.04);
-$shadow-sm: 0 2px 8px 0 rgba(60,72,88,0.08);
-$shadow-md: 0 4px 16px 0 rgba(60,72,88,0.10);
+// ─── SOMBRAS ─────────────────────────────────────────────────────────────────
+$shadow-xs:  0 1px 2px rgba(26,37,53,0.04);
+$shadow-sm:  0 1px 4px rgba(26,37,53,0.06), 0 2px 8px rgba(26,37,53,0.04);
+$shadow-md:  0 2px 8px rgba(26,37,53,0.06), 0 4px 16px rgba(26,37,53,0.04);
+$shadow-lg:  0 8px 24px rgba(26,37,53,0.08);
 
-// TIPOGRAFÍA
-$font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
-$font-size-h1: 2.25rem;
-$font-size-h2: 1.75rem;
-$font-size-h3: 1.375rem;
-$font-size-h4: 1.125rem;
-$font-size-h5: 1rem;
-$font-size-h6: 0.875rem;
-$font-size-body: 1rem;
-$font-size-caption: 0.75rem;
-$font-weight-regular: 400;
-$font-weight-medium: 500;
-$font-weight-bold: 700;
+// ─── TRANSICIONES ────────────────────────────────────────────────────────────
+$transition-fast:   150ms ease;
+$transition-normal: 220ms ease;
 
-// ESTADOS
-$state-readonly-bg: #F5F7FA;
-$state-empty-bg: #F8FAFC;
-$state-loading-bg: #F2F6FA;
-$state-disabled-bg: #F0F1F3;
+// ─── NAVEGACIÓN ──────────────────────────────────────────────────────────────
+$nav-width:          240px;
+$nav-bg:             #360568;
+$nav-text:           #C8D0DC;
+$nav-text-active:    #FFFFFF;
+$nav-item-active-bg: #2D3D55;
+$nav-item-hover-bg:  #243047;
+$topbar-height:      64px;
+
+// ─── ALIASES ADICIONALES ─────────────────────────────────────────────────────
+$space-0:             0;
+$color-disabled:      $color-disabled-text;
+$state-readonly-bg:   $color-readonly-bg;
+$state-empty-bg:      #F8FAFC;
+$state-loading-bg:    $color-primary-subtle;
+$state-disabled-bg:   $color-disabled-bg;

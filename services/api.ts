@@ -7,9 +7,13 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const auth = useAuthStore()
-  if (auth.token) {
-    config.headers.Authorization = `Bearer ${auth.token}`
+  try {
+    const auth = useAuthStore()
+    if (auth.token) {
+      config.headers.Authorization = `Bearer ${auth.token}`
+    }
+  } catch {
+    // Pinia no disponible fuera del contexto Vue (ej. SSR)
   }
   return config
 })

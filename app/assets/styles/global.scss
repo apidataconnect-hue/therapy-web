@@ -1,0 +1,336 @@
+/**
+ * global.scss — Estilos globales de therapy-web
+ * Aplica overrides a Vuetify y define clases utilitarias reutilizables
+ */
+
+@use 'tokens' as *;
+
+// ─── TIPOGRAFÍA BASE ────────────────────────────────────────────────────────
+
+body {
+  font-family: $font-family;
+  color: $color-text-main;
+  background: $color-background;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+  line-height: $line-height-tight;
+}
+
+// ─── PAGE HEADER ─────────────────────────────────────────────────────────────
+
+.page-header {
+  margin-bottom: $space-6;
+
+  &__title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    letter-spacing: -0.01em;
+    margin: 0 0 $space-1;
+  }
+
+  &__subtitle {
+    font-size: $font-size-base;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $space-2;
+    align-items: center;
+  }
+}
+
+// ─── CARDS ───────────────────────────────────────────────────────────────────
+
+.v-card {
+  border: 1px solid $color-border !important;
+  border-radius: $radius-lg !important;
+  box-shadow: $shadow-sm !important;
+  background: $color-surface;
+
+  &.card--flat {
+    box-shadow: none !important;
+    background: $color-background;
+  }
+
+  &.card--readonly {
+    background: $color-readonly-bg;
+    border-color: $color-divider !important;
+  }
+}
+
+.section-card {
+  padding: $space-5;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-5;
+    padding-bottom: $space-4;
+    border-bottom: 1px solid $color-divider;
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+  }
+}
+
+// ─── TABLAS ──────────────────────────────────────────────────────────────────
+
+.v-data-table {
+  border-radius: $radius-lg !important;
+  border: 1px solid $color-border !important;
+  overflow: hidden;
+
+  .v-data-table__thead {
+    background: $color-background;
+
+    th {
+      font-size: $font-size-sm !important;
+      font-weight: $font-weight-semibold !important;
+      color: $color-text-secondary !important;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid $color-border !important;
+    }
+  }
+
+  .v-data-table__tr {
+    transition: background $transition-fast;
+
+    &:hover td {
+      background: $color-hover;
+    }
+
+    td {
+      font-size: $font-size-base;
+      color: $color-text-main;
+      border-bottom: 1px solid $color-divider !important;
+      padding: $space-3 $space-4 !important;
+    }
+
+    &:last-child td {
+      border-bottom: none !important;
+    }
+  }
+}
+
+// ─── FORMULARIOS ─────────────────────────────────────────────────────────────
+
+.v-field {
+  border-radius: $radius-md !important;
+
+  .v-field__input {
+    font-size: $font-size-base;
+    color: $color-text-main;
+  }
+
+  &--focused .v-field__outline {
+    --v-field-border-color: #{$color-primary};
+  }
+}
+
+.v-label {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+// ─── STATUS CHIPS ────────────────────────────────────────────────────────────
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 2px $space-3;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.6;
+
+  &--active    { background: $color-success-subtle; color: $color-success; }
+  &--inactive  { background: $color-disabled-bg; color: $color-text-muted; }
+  &--pending   { background: $color-warning-subtle; color: $color-warning; }
+  &--error     { background: $color-error-subtle; color: $color-error; }
+  &--info      { background: $color-info-subtle; color: $color-info; }
+  &--therapist { background: $color-therapist-subtle; color: $color-therapist; }
+  &--patient   { background: $color-patient-subtle; color: $color-patient; }
+}
+
+// ─── ESTADOS VACÍOS ──────────────────────────────────────────────────────────
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $space-8 $space-6;
+  text-align: center;
+  min-height: 240px;
+  color: $color-text-secondary;
+
+  &__icon {
+    margin-bottom: $space-4;
+    opacity: 0.4;
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    margin-bottom: $space-2;
+  }
+
+  &__text {
+    font-size: $font-size-base;
+    color: $color-text-secondary;
+    max-width: 360px;
+    margin-bottom: $space-5;
+    line-height: $line-height-normal;
+  }
+}
+
+// ─── CALENDARIO ──────────────────────────────────────────────────────────────
+
+.calendar-event {
+  border-radius: $radius-sm;
+  padding: 2px $space-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity $transition-fast;
+
+  &--therapist {
+    background: $color-therapist-subtle;
+    color: $color-therapist;
+    border-left: 2px solid $color-therapist;
+  }
+
+  &--patient {
+    background: $color-patient-subtle;
+    color: $color-patient;
+    border-left: 2px solid $color-patient;
+  }
+
+  &--cancelled {
+    background: $color-disabled-bg;
+    color: $color-text-muted;
+    border-left: 2px solid $color-disabled-text;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  &:hover { opacity: 0.85; }
+}
+
+// ─── READONLY (vista paciente) ────────────────────────────────────────────────
+
+.readonly-view {
+  .v-field {
+    pointer-events: none;
+
+    .v-field__input {
+      color: $color-text-secondary;
+    }
+  }
+
+  .v-card {
+    background: $color-readonly-bg;
+    border-color: $color-divider !important;
+  }
+}
+
+// ─── BOTONES ─────────────────────────────────────────────────────────────────
+
+.v-btn {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.01em;
+  text-transform: none;
+
+  &.v-btn--size-default {
+    height: 40px;
+    padding: 0 $space-5;
+  }
+}
+
+// ─── NAVEGACIÓN LATERAL ──────────────────────────────────────────────────────
+
+.nav-drawer {
+  background: $nav-bg !important;
+  border-right: none !important;
+
+  .nav-item {
+    border-radius: $radius-md;
+    margin: 2px $space-2;
+    color: $nav-text;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover {
+      background: $nav-item-hover-bg;
+      color: $nav-text-active;
+    }
+
+    &--active {
+      background: $nav-item-active-bg !important;
+      color: $nav-text-active !important;
+
+      .v-list-item__prepend .v-icon {
+        color: $color-primary-light;
+      }
+    }
+  }
+
+  .nav-section-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba($nav-text, 0.5);
+    padding: $space-4 $space-4 $space-1;
+  }
+}
+
+// ─── NOTIFICACIONES ──────────────────────────────────────────────────────────
+
+.v-snackbar {
+  .v-snackbar__content {
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// ─── UTILIDADES ──────────────────────────────────────────────────────────────
+
+.text-main      { color: $color-text-main !important; }
+.text-secondary { color: $color-text-secondary !important; }
+.text-muted     { color: $color-text-muted !important; }
+.text-primary   { color: $color-primary !important; }
+.text-success   { color: $color-success !important; }
+.text-warning   { color: $color-warning !important; }
+.text-error     { color: $color-error !important; }
+
+.bg-subtle-primary   { background: $color-primary-subtle !important; }
+.bg-subtle-secondary { background: $color-secondary-subtle !important; }
+.bg-surface          { background: $color-surface !important; }
+.bg-background       { background: $color-background !important; }
+
+.divider-bottom { border-bottom: 1px solid $color-divider; }
+.divider-top    { border-top: 1px solid $color-divider; }
+
+.font-semibold { font-weight: $font-weight-semibold !important; }
+.font-medium   { font-weight: $font-weight-medium !important; }

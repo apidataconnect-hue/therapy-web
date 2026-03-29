@@ -1,11 +1,14 @@
 /**
- * src/styles/settings.scss
- *
- * Configures SASS variables and Vuetify overwrites
+ * settings.scss — Configuración global de Vuetify + variables SCSS
+ * therapy-web · Nuxt 4 + Vuetify 3
  */
 
-@use 'tokens';
-// https://vuetifyjs.com/features/sass-variables/
-// @use 'vuetify/settings' with (
-//   $color-pack: false
-// );
+@use 'tokens' as *;
+
+// ─── VUETIFY SASS OVERRIDES ───────────────────────────────────────────────────
+$body-font-family:              $font-family !default;
+$heading-font-family:           $font-family !default;
+$border-radius-root:            $radius-md !default;
+$shadow-key-umbra-opacity:      0.03 !default;
+$shadow-key-penumbra-opacity:   0.02 !default;
+$shadow-ambient-shadow-opacity: 0.01 !default;

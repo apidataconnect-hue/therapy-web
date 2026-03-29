@@ -14,8 +14,8 @@ const sessions = ref<any[]>([])
 const loading = ref(false)
 const headers = [
   { text: 'Paciente', value: 'patientName' },
-  { text: 'Fecha', value: 'date' },
-  { text: 'Estado', value: 'status' },
+  { text: 'Fecha de la sesión', value: 'date' },
+  { text: 'Estado de la sesión', value: 'status' },
   { text: 'Notas', value: 'notes' },
 ]
 

@@ -26,7 +26,11 @@ interface _GlobalComponents {
   BaseSectionCard: typeof import("../../app/components/base/SectionCard.vue")['default']
   BaseStatsCard: typeof import("../../app/components/base/StatsCard.vue")['default']
   BaseStatusChip: typeof import("../../app/components/base/StatusChip.vue")['default']
+  BaseTagManager: typeof import("../../app/components/base/TagManager.vue")['default']
   Base: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Base']
+  CalendarPatientCalendar: typeof import("../../app/components/calendar/PatientCalendar.vue")['default']
+  CalendarTherapistCalendar: typeof import("../../app/components/calendar/TherapistCalendar.vue")['default']
+  NotificationsNotificationBar: typeof import("../../app/components/notifications/NotificationBar.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
   NuxtLayout: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
   NuxtErrorBoundary: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -62,7 +66,11 @@ interface _GlobalComponents {
   LazyBaseSectionCard: LazyComponent<typeof import("../../app/components/base/SectionCard.vue")['default']>
   LazyBaseStatsCard: LazyComponent<typeof import("../../app/components/base/StatsCard.vue")['default']>
   LazyBaseStatusChip: LazyComponent<typeof import("../../app/components/base/StatusChip.vue")['default']>
+  LazyBaseTagManager: LazyComponent<typeof import("../../app/components/base/TagManager.vue")['default']>
   LazyBase: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Base']>
+  LazyCalendarPatientCalendar: LazyComponent<typeof import("../../app/components/calendar/PatientCalendar.vue")['default']>
+  LazyCalendarTherapistCalendar: LazyComponent<typeof import("../../app/components/calendar/TherapistCalendar.vue")['default']>
+  LazyNotificationsNotificationBar: LazyComponent<typeof import("../../app/components/notifications/NotificationBar.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   LazyNuxtLayout: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
   LazyNuxtErrorBoundary: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
