@@ -33,30 +33,6 @@
         hide-details
         class="ss-search"
       />
-      <div v-if="allSessionTags.length > 0" class="ss-tag-filter">
-        <span class="ss-tag-filter__label">Etiqueta:</span>
-        <button
-          v-for="tag in allSessionTags"
-          :key="tag.id"
-          type="button"
-          class="ss-tag-chip"
-          :class="{ 'ss-tag-chip--active': selectedTagIds.includes(tag.id) }"
-          :style="selectedTagIds.includes(tag.id)
-            ? { background: tag.color ?? '#9E9E9E', color: '#fff', borderColor: tag.color ?? '#9E9E9E' }
-            : { borderColor: tag.color ?? '#9E9E9E', color: tag.color ?? '#9E9E9E' }"
-          @click="toggleTagFilter(tag.id)"
-        >
-          {{ tag.name }}
-        </button>
-        <button
-          v-if="selectedTagIds.length > 0"
-          type="button"
-          class="ss-tag-chip ss-tag-chip--clear"
-          @click="selectedTagIds = []"
-        >
-          <v-icon icon="mdi-close" size="11" class="mr-1" />Limpiar
-        </button>
-      </div>
       <v-tabs v-model="tab" color="primary" density="compact" class="ss-tabs">
         <v-tab value="upcoming">
           Próximas
@@ -65,7 +41,7 @@
           </v-chip>
         </v-tab>
         <v-tab value="completed">
-          Completadas
+          Pasadas
           <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'completed' ? 'primary' : undefined">
             {{ counts.completed }}
           </v-chip>
@@ -145,10 +121,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTherapistSessions } from '~/services/therapistService'
-import { getProcesses } from '~/services/processService'
 
 definePageMeta({
   middleware: ['auth', 'role'],
@@ -160,27 +135,6 @@ const sessions = ref<any[]>([])
 const loading = ref(false)
 const search = ref('')
 const tab = ref('upcoming')
-const selectedTagIds = ref<string[]>([])
-
-// processId → tags map, built after loading sessions
-const processTagMap = ref<Record<string, Array<{ id: string; name: string; color?: string | null }>>>({})
-
-// Deduplicated list of all tags present in current sessions (for filter chips)
-const allSessionTags = computed(() => {
-  const seen = new Map<string, { id: string; name: string; color?: string | null }>()
-  for (const s of sessions.value) {
-    for (const t of (s.tags ?? [])) {
-      if (!seen.has(t.id)) seen.set(t.id, t)
-    }
-  }
-  return Array.from(seen.values())
-})
-
-function toggleTagFilter(id: string) {
-  const idx = selectedTagIds.value.indexOf(id)
-  if (idx === -1) selectedTagIds.value.push(id)
-  else selectedTagIds.value.splice(idx, 1)
-}
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: 'Programada',
@@ -224,10 +178,18 @@ function isPast(s: any) {
     && new Date(s.endAt) <= new Date()
 }
 
+function byDate(a: any, b: any, asc: boolean) {
+  const diff = new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+  return asc ? diff : -diff
+}
+
 const byTab = computed(() => {
-  if (tab.value === 'upcoming')  return sessions.value.filter(s => isUpcoming(s))
-  if (tab.value === 'completed') return sessions.value.filter(s => s.appointmentStatus === 'completed' || isPast(s))
-  if (tab.value === 'cancelled') return sessions.value.filter(s => s.appointmentStatus === 'cancelled' || s.appointmentStatus === 'no_show')
+  if (tab.value === 'upcoming')
+    return sessions.value.filter(s => isUpcoming(s)).sort((a, b) => byDate(a, b, true))
+  if (tab.value === 'completed')
+    return sessions.value.filter(s => s.appointmentStatus === 'completed' || isPast(s)).sort((a, b) => byDate(a, b, false))
+  if (tab.value === 'cancelled')
+    return sessions.value.filter(s => s.appointmentStatus === 'cancelled' || s.appointmentStatus === 'no_show').sort((a, b) => byDate(a, b, false))
   return sessions.value
 })
 
@@ -235,9 +197,6 @@ const filteredList = computed(() => {
   let list = byTab.value
   const q = search.value.toLowerCase().trim()
   if (q) list = list.filter(s => (s.patientName ?? '').toLowerCase().includes(q))
-  if (selectedTagIds.value.length > 0) {
-    list = list.filter(s => s.tags?.some((t: any) => selectedTagIds.value.includes(t.id)))
-  }
   return list
 })
 
@@ -247,29 +206,22 @@ const counts = computed(() => ({
   cancelled: sessions.value.filter(s => s.appointmentStatus === 'cancelled' || s.appointmentStatus === 'no_show').length,
 }))
 
-onMounted(async () => {
+onMounted(loadSessions)
+onActivated(loadSessions)
+
+async function loadSessions() {
   loading.value = true
   try {
-    const [sessionsResult, a, b, c] = await Promise.all([
-      getTherapistSessions(),
-      getProcesses({ processStatus: ['active'], size: 200 }),
-      getProcesses({ processStatus: ['paused', 'draft', 'disabled'], size: 200 }),
-      getProcesses({ processStatus: ['closed', 'archived'], size: 200 }),
-    ])
-    // build processId → tags map
-    for (const proc of [...(a.items ?? []), ...(b.items ?? []), ...(c.items ?? [])]) {
-      if (proc.tags?.length) processTagMap.value[proc.id] = proc.tags
-    }
+    const sessionsResult = await getTherapistSessions()
     sessions.value = (sessionsResult.items ?? []).map((s: any) => ({
       ...s,
       patientName: s.patientName ?? s.patientId,
       appointmentStatus: s.appointmentStatus ?? s.status,
-      tags: (s.therapyProcessId ?? s.processId) ? (processTagMap.value[s.therapyProcessId ?? s.processId] ?? []) : [],
     }))
   } finally {
     loading.value = false
   }
-})
+}
 </script>
 
 <style lang="scss" scoped>
@@ -279,6 +231,7 @@ onMounted(async () => {
 .ss-page {
   padding: $space-5;
   max-width: 860px;
+  margin: 0 auto;
 
   &__header {
     display: flex;
@@ -331,48 +284,6 @@ onMounted(async () => {
 
 .ss-search { max-width: 360px; }
 .ss-tabs   { border-bottom: 1px solid $color-border; }
-
-// ── Tag filter ────────────────────────────────────────────────────────────────
-.ss-tag-filter {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: $space-1;
-
-  &__label {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
-    color: $color-text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-right: $space-1;
-  }
-}
-
-.ss-tag-chip {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.7rem;
-  font-weight: $font-weight-medium;
-  padding: 2px 10px;
-  border-radius: $radius-full;
-  border: 1.5px solid;
-  background: transparent;
-  cursor: pointer;
-  transition: background $transition-fast, color $transition-fast, transform $transition-fast;
-  outline: none;
-
-  &:hover { transform: translateY(-1px); }
-  &:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
-
-  &--clear {
-    border-color: $color-text-muted !important;
-    color: $color-text-muted !important;
-    background: transparent !important;
-    font-size: 0.68rem;
-  }
-}
-
 
 // ── List ─────────────────────────────────────────────────────────────────────
 .ss-list {

@@ -202,6 +202,7 @@ onMounted(async () => {
 .pt-page {
   padding: $space-5;
   max-width: 860px;
+  margin: 0 auto;
 
   &__header {
     display: flex;

@@ -343,6 +343,108 @@ Clinical record tied to a `TherapyProcess` and optionally an `Appointment`.
 
 ---
 
+## Session Plan Templates (`/api/session-plan-template`)
+
+Prompt templates used to instruct OpenAI when generating a session plan via Telegram.
+
+**Visibility rules:**
+- **System templates** (`isSystem = true`) are created by the platform and are visible to all therapists but cannot be modified or deleted.
+- **Own templates** (`isSystem = false`) are private to each therapist and fully manageable.
+
+| Method | Path | Auth | Description |
+|--------|------|:----:|-------------|
+| `GET`    | `/api/session-plan-template` | ✅ | List all templates visible to the authenticated therapist (own + system). |
+| `GET`    | `/api/session-plan-template/{hash}` | ✅ | Get full detail of a visible template. |
+| `POST`   | `/api/session-plan-template` | ✅ | Create a new template owned by the authenticated therapist. |
+| `PATCH`  | `/api/session-plan-template/{hash}` | ✅ | Update own template. Returns `403` for system templates. |
+| `DELETE` | `/api/session-plan-template/{hash}` | ✅ | Soft-delete own template. Returns `403` for system templates. |
+
+### Body fields (POST / PATCH)
+| Field | Type | POST | PATCH | Notes |
+|-------|------|:----:|:-----:|-------|
+| `name` | string | ✅ | ✅ | |
+| `description` | string \| null | — | ✅ | |
+| `systemPrompt` | string | ✅ | ✅ | OpenAI system-role instruction. |
+| `userPromptTemplate` | string | ✅ | ✅ | User-role prompt. Use `{{placeholder}}` tokens (see below). |
+| `isDefault` | bool | — | ✅ | Sets this template as the therapist's preferred default. Clears the previous default. |
+| `sessionsToAnalyze` | int (1–10) | — | ✅ | Number of past session summaries to include as context. Default `3`. |
+ 
+### Placeholder tokens for `userPromptTemplate`
+| Token | Replaced with |
+|-------|---------------|
+| `{{patient_name}}` | Patient's full name |
+| `{{reason_for_consultation}}` | Main reason the patient sought therapy |
+| `{{session_count}}` | Number of completed session notes for this therapy process |
+| `{{previous_sessions}}` | Last N session summaries (oldest → newest), where N = `sessionsToAnalyze` |
+| `{{next_appointment_date}}` | Date and time of the upcoming appointment (`d/m/Y H:i`) |
+| `{{next_appointment_type}}` | Appointment type label (`Presencial`, `Online`, `Teléfono`, `Visita domiciliaria`) |
+
+### List / GET — response shape
+```json
+[
+  {
+    "id": "hash",
+    "name": "Plantilla estándar de sesión",
+    "description": "Plantilla general para sesiones individuales.",
+    "isDefault": true,
+    "isSystem": true,
+    "sessionsToAnalyze": 3
+  }
+]
+```
+
+### GET `/{hash}` — full item shape
+```json
+{
+  "id": "hash",
+  "name": "Plantilla estándar de sesión",
+  "description": "Plantilla general para sesiones individuales.",
+  "systemPrompt": "Eres un asistente de planificación clínica...",
+  "userPromptTemplate": "Paciente: {{patient_name}}\n...",
+  "isDefault": true,
+  "isSystem": true,
+  "sessionsToAnalyze": 3,
+  "createdAt": "2026-04-02T12:00:00+00:00",
+  "updatedAt": null
+}
+```
+
+---
+
+## Session Plans (`/api/session-plan`)
+
+AI-generated clinical session plans, linked to an appointment and optionally to a `SessionPlanTemplate`.
+
+> Plans are also accessible via `SessionNote`: the note's `planId` and `plan` (content string) fields
+> are populated automatically after a plan is generated.
+
+| Method | Path | Auth | Description |
+|--------|------|:----:|-------------|
+| `GET`    | `/api/session-plan/{appointmentHash}` | ✅ | Get the existing plan for an appointment (or empty `{}` if none). |
+| `POST`   | `/api/session-plan/{appointmentHash}` | ✅ | Generate (or regenerate) a plan. |
+| `DELETE` | `/api/session-plan/{appointmentHash}` | ✅ | Remove the plan (sets `session_note.session_plan_id = null`). |
+
+### POST — body
+| Field | Type | Required | Notes |
+|-------|------|:--------:|-------|
+| `templateId` | hash \| null | — | Template to use. Omit to use the therapist's default, or the platform default. |
+| `regenerate` | bool | — | `true` forces a new generation even if a plan already exists. Default `false`. |
+
+### Response shape (GET / POST)
+```json
+{
+  "id": "hash",
+  "appointmentId": "hash",
+  "templateId": "hash",
+  "templateName": "Plantilla estándar de sesión",
+  "content": "**Objetivos de la sesión**\n...",
+  "createdAt": "2026-04-03T10:00:00+00:00",
+  "updatedAt": null
+}
+```
+
+---
+
 ## Multimedia (`/api/multimedia`)
 
 Upload files to object storage (MinIO/S3-compatible).  

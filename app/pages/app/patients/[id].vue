@@ -262,6 +262,7 @@ onMounted(async () => {
 .pd-page {
   padding: $space-5;
   max-width: 780px;
+  margin: 0 auto;
 
   &__header {
     margin-bottom: $space-5;

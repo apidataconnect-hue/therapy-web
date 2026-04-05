@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useTagStore } from '~/stores/tag'
 import { getProcesses } from '~/services/processService'
@@ -147,7 +147,8 @@ const loading       = ref(true)
 const processes     = ref<any[]>([])
 const totalPatients = ref(0)
 
-onMounted(async () => {
+async function loadDashboard() {
+  loading.value = true
   try {
     const [all, pData] = await Promise.all([
       getProcesses({ size: 500 }),
@@ -161,7 +162,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadDashboard)
+onActivated(loadDashboard)
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
 const statusCount = computed(() => {
@@ -298,6 +302,7 @@ const quickLinks = [
 .db-page {
   padding: $space-5;
   max-width: 1000px;
+  margin: 0 auto;
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────

@@ -138,11 +138,12 @@ const drawer = ref(true)
 const rail = ref(false)
 
 const therapistNav = [
-  { to: '/app/dashboard',            icon: 'mdi-view-dashboard-outline',  label: 'Panel' },
-  { to: '/app/patients',             icon: 'mdi-account-group-outline',    label: 'Pacientes' },
-  { to: '/app/therapist/sessions',   icon: 'mdi-calendar-check-outline',  label: 'Sesiones' },
-  { to: '/app/therapist/therapies',  icon: 'mdi-clipboard-pulse-outline', label: 'Terapias' },
-  { to: '/app/therapist/calendar',   icon: 'mdi-calendar-month-outline',  label: 'Calendario' },
+  { to: '/app/dashboard',                 icon: 'mdi-view-dashboard-outline',  label: 'Panel' },
+  { to: '/app/patients',                  icon: 'mdi-account-group-outline',    label: 'Pacientes' },
+  { to: '/app/therapist/sessions',        icon: 'mdi-calendar-check-outline',  label: 'Sesiones' },
+  { to: '/app/therapist/therapies',       icon: 'mdi-clipboard-pulse-outline', label: 'Terapias' },
+  { to: '/app/therapist/calendar',        icon: 'mdi-calendar-month-outline',  label: 'Calendario' },
+  { to: '/app/therapist/ai-templates',    icon: 'mdi-creation-outline',        label: 'Plantillas IA' },
 ]
 
 const patientNav = [

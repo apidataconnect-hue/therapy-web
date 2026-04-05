@@ -69,7 +69,7 @@
             size="small"
             :loading="statusLoading"
             prepend-icon="mdi-check-all"
-            @click="changeStatus('completed')"
+            @click="confirmCompleteDialog = true"
           >Completar</v-btn>
           <v-btn
             v-if="appointment.appointmentStatus === 'scheduled' || appointment.appointmentStatus === 'confirmed'"
@@ -275,7 +275,42 @@
         </v-form>
       </div>
 
+      <!-- ── Session plan AI ────────────────────────────────────────────────── -->
+      <SessionPlanSection
+        :appointment-id="id"
+        :note-id="note?.id ?? null"
+        :initial-plan="note?.plan ?? null"
+        :initial-plan-id="note?.planId ?? null"
+      />
+
     </template>
+
+    <!-- ── Confirm complete dialog ──────────────────────────────────────────── -->
+    <v-dialog v-model="confirmCompleteDialog" max-width="400">
+      <v-card>
+        <v-card-text class="px-6 pt-6 pb-2 text-center">
+          <v-icon icon="mdi-check-circle-outline" size="52" color="success" class="mb-3" />
+          <div class="text-h6 font-weight-bold mb-3">¿Marcar como completada?</div>
+          <p class="text-body-2 text-medium-emphasis mb-4">
+            Acuérdate de registrar la nota clínica.
+          </p>
+          <v-alert type="warning" variant="tonal" density="compact" icon="mdi-alert-outline">
+            Esta acción <strong>no se puede deshacer</strong>.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-3 gap-2">
+          <v-btn variant="tonal" @click="confirmCompleteDialog = false" class="flex-grow-1">Cancelar</v-btn>
+          <v-btn
+            color="success"
+            variant="flat"
+            :loading="statusLoading"
+            prepend-icon="mdi-check-all"
+            class="flex-grow-1"
+            @click="confirmCompleteDialog = false; changeStatus('completed')"
+          >Sí, completar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- ── Cancel appointment dialog ─────────────────────────────────────────── -->
     <v-dialog v-model="cancelDialog" max-width="480">
@@ -327,7 +362,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getAppointment, updateAppointment, cancelAppointment } from '~/services/appointmentService'
 import { getPatient } from '~/services/patientService'
@@ -339,12 +374,13 @@ import {
   deleteSessionNote,
   type SessionNote,
 } from '~/services/sessionNoteService'
+import SessionPlanSection from '~/components/session/SessionPlanSection.vue'
 
 definePageMeta({ middleware: ['auth', 'role'], role: 'THERAPIST' })
 
 const route  = useRoute()
 const router = useRouter()
-const id     = route.params.id as string
+const id     = computed(() => route.params.id as string)
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const loading   = ref(true)
@@ -358,6 +394,7 @@ const statusLoading = ref(false)
 const cancelDialog  = ref(false)
 const cancelReason  = ref('')
 const confirmDelete = ref(false)
+const confirmCompleteDialog = ref(false)
 
 const form = ref({
   summary:      '',
@@ -447,11 +484,16 @@ function populateForm(n: SessionNote) {
 }
 
 // ── Load ──────────────────────────────────────────────────────────────────────
-onMounted(async () => {
+async function loadData(appointmentId: string) {
+  loading.value = true
+  appointment.value = null
+  note.value = null
+  savedAt.value = null
+  form.value = { summary: '', observations: '', interventions: '', homework: '', nextSteps: '', privateNotes: '' }
   try {
     const [appt, existingNote] = await Promise.all([
-      getAppointment(id),
-      getSessionNoteByAppointment(id),
+      getAppointment(appointmentId),
+      getSessionNoteByAppointment(appointmentId),
     ])
     appointment.value = appt
     const patientId = (appt as any).patientId ?? (appt as any).patient?.id
@@ -461,7 +503,6 @@ onMounted(async () => {
         .catch(e => { console.error('[session-detail] process load error', e); patientProcesses.value = [] })
       getPatient(patientId)
         .then(p => {
-          console.log('[session-detail] patient response', p)
           const first = (p as any).firstName ?? (p as any).first_name ?? ''
           const last  = (p as any).lastName  ?? (p as any).last_name  ?? ''
           const name  = (p as any).fullName ?? `${first} ${last}`.trim()
@@ -478,7 +519,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(() => loadData(id.value))
+watch(id, (newId) => { if (newId) loadData(newId) })
 
 // ── Save note ─────────────────────────────────────────────────────────────────
 async function save() {
@@ -502,7 +546,7 @@ async function save() {
       note.value = await createSessionNote({
         ...payload,
         processId:     (appointment.value.therapyProcessId ?? appointment.value.processId) || undefined,
-        appointmentId: id,
+        appointmentId: id.value,
       })
     }
 
@@ -521,7 +565,7 @@ async function linkProcess() {
   if (!selectedProcessId.value) return
   linkingProcess.value = true
   try {
-    appointment.value = await updateAppointment(id, { processId: selectedProcessId.value })
+    appointment.value = await updateAppointment(id.value, { processId: selectedProcessId.value })
     notify('Cita vinculada al proceso correctamente')
   } catch (e: any) {
     notify(e?.response?.data?.message ?? 'Error al vincular el proceso', 'error')
@@ -552,7 +596,7 @@ async function doDelete() {
 async function changeStatus(status: 'confirmed' | 'completed') {
   statusLoading.value = true
   try {
-    appointment.value = await updateAppointment(id, { appointmentStatus: status })
+    appointment.value = await updateAppointment(id.value, { appointmentStatus: status })
     notify(`Sesión marcada como ${(STATUS_LABELS[status] ?? status).toLowerCase()}`)
   } catch {
     notify('Error al actualizar el estado', 'error')
@@ -565,7 +609,7 @@ async function doCancel() {
   if (!cancelReason.value.trim()) return
   statusLoading.value = true
   try {
-    appointment.value = await cancelAppointment(id, {
+    appointment.value = await cancelAppointment(id.value, {
       cancelReason: cancelReason.value.trim(),
       cancelledBy:  'therapist',
     })
@@ -586,6 +630,7 @@ async function doCancel() {
 .sd-page {
   padding: $space-5;
   max-width: 760px;
+  margin: 0 auto;
 }
 
 // ── Back link ─────────────────────────────────────────────────────────────────

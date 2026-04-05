@@ -185,6 +185,8 @@ declare global {
   const useServerHead: typeof import('../../node_modules/nuxt/dist/app/composables/head').useServerHead
   const useServerHeadSafe: typeof import('../../node_modules/nuxt/dist/app/composables/head').useServerHeadSafe
   const useServerSeoMeta: typeof import('../../node_modules/nuxt/dist/app/composables/head').useServerSeoMeta
+  const useSessionPlan: typeof import('../../app/composables/useSessionPlan').useSessionPlan
+  const useSessionPlanTemplateStore: typeof import('../../app/stores/sessionPlanTemplate').useSessionPlanTemplateStore
   const useShadowRoot: typeof import('vue').useShadowRoot
   const useSlots: typeof import('vue').useSlots
   const useState: typeof import('../../node_modules/nuxt/dist/app/composables/state').useState
@@ -426,6 +428,8 @@ declare module 'vue' {
     readonly useServerHead: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useServerHead']>
     readonly useServerHeadSafe: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useServerHeadSafe']>
     readonly useServerSeoMeta: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useServerSeoMeta']>
+    readonly useSessionPlan: UnwrapRef<typeof import('../../app/composables/useSessionPlan')['useSessionPlan']>
+    readonly useSessionPlanTemplateStore: UnwrapRef<typeof import('../../app/stores/sessionPlanTemplate')['useSessionPlanTemplateStore']>
     readonly useShadowRoot: UnwrapRef<typeof import('vue')['useShadowRoot']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useState: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/state')['useState']>

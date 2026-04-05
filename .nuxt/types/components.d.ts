@@ -31,6 +31,7 @@ interface _GlobalComponents {
   CalendarPatientCalendar: typeof import("../../app/components/calendar/PatientCalendar.vue")['default']
   CalendarTherapistCalendar: typeof import("../../app/components/calendar/TherapistCalendar.vue")['default']
   NotificationsNotificationBar: typeof import("../../app/components/notifications/NotificationBar.vue")['default']
+  SessionPlanSection: typeof import("../../app/components/session/SessionPlanSection.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
   NuxtLayout: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
   NuxtErrorBoundary: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -71,6 +72,7 @@ interface _GlobalComponents {
   LazyCalendarPatientCalendar: LazyComponent<typeof import("../../app/components/calendar/PatientCalendar.vue")['default']>
   LazyCalendarTherapistCalendar: LazyComponent<typeof import("../../app/components/calendar/TherapistCalendar.vue")['default']>
   LazyNotificationsNotificationBar: LazyComponent<typeof import("../../app/components/notifications/NotificationBar.vue")['default']>
+  LazySessionPlanSection: LazyComponent<typeof import("../../app/components/session/SessionPlanSection.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   LazyNuxtLayout: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
   LazyNuxtErrorBoundary: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>

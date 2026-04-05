@@ -31,12 +31,14 @@ export { requestIdleCallback, cancelIdleCallback } from '#app/compat/idle-callba
 export { setInterval } from '#app/compat/interval';
 export { definePageMeta, PageMeta } from '#app/composables/pages';
 export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
+export { useSessionPlan } from '../app/composables/useSessionPlan';
 export { useAppointmentStore, AppointmentState, Appointment } from '../app/stores/appointment';
 export { useAuthStore, User, AuthState } from '../app/stores/auth';
 export { useInvitationStore, Invitation, InvitationState } from '../app/stores/invitation';
 export { useNotificationStore, Notification } from '../app/stores/notification';
 export { usePatientStore, PatientState, Patient } from '../app/stores/patient';
 export { useProcessStore, ProcessState, TherapyProcess } from '../app/stores/process';
+export { useSessionPlanTemplateStore } from '../app/stores/sessionPlanTemplate';
 export { useTagStore } from '../app/stores/tag';
 export { PALETTES, applyPaletteToTheme, useThemeStore, ColorPalette } from '../app/stores/theme';
 export { useWorkspaceStore, WorkspaceState, Workspace } from '../app/stores/workspace';
