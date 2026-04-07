@@ -19,9 +19,7 @@
         <div class="pd-avatar">{{ initials }}</div>
 
         <div class="pd-page__title-info">
-          <div class="pd-page__name">
-            {{ patient?.fullName || (patient ? `${patient.firstName} ${patient.lastName}` : '—') }}
-          </div>
+          <div class="pd-page__name">{{ displayName }}</div>
           <span v-if="patient" class="pd-status" :class="`pd-status--${patient.patientStatus}`">
             {{ STATUS_LABELS[patient.patientStatus] ?? patient.patientStatus }}
           </span>
@@ -42,6 +40,12 @@
             </v-btn>
           </template>
           <v-list density="compact" min-width="200">
+            <v-list-item
+              prepend-icon="mdi-pencil-outline"
+              title="Editar información"
+              @click="openEditDialog"
+            />
+            <v-divider class="my-1" />
             <v-list-item
               v-if="patient.patientStatus !== 'active'"
               prepend-icon="mdi-account-check-outline"
@@ -172,12 +176,168 @@
       </div>
     </template>
   </div>
+
+  <!-- ── Edit patient dialog ──────────────────────────────────────────────── -->
+  <v-dialog v-model="editDialog" max-width="600" scrollable>
+    <v-card>
+      <v-card-title class="pt-5 px-5 pb-2">Editar información del paciente</v-card-title>
+
+      <v-card-text class="px-5 py-3">
+        <!-- Basic info -->
+        <div class="pd-edit-section-label">Datos personales</div>
+        <div class="pd-edit-grid">
+          <v-text-field
+            v-model="editForm.firstName"
+            label="Nombre"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+            :error-messages="editFieldErrors.firstName"
+            @input="delete editFieldErrors.firstName"
+          />
+          <v-text-field
+            v-model="editForm.lastName"
+            label="Apellidos"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+            :error-messages="editFieldErrors.lastName"
+            @input="delete editFieldErrors.lastName"
+          />
+          <v-text-field
+            v-model="editForm.birthDate"
+            label="Fecha de nacimiento"
+            type="date"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+          <v-text-field
+            v-model="editForm.documentNumber"
+            label="Documento"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+        </div>
+        <v-checkbox
+          v-model="editForm.isMinor"
+          label="Menor de edad"
+          density="compact"
+          hide-details
+          class="mt-1 mb-3"
+        />
+
+        <!-- Contact -->
+        <div class="pd-edit-section-label">Contacto</div>
+        <div class="pd-edit-grid">
+          <v-text-field
+            v-model="editForm.email"
+            label="Email"
+            type="email"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+          <v-text-field
+            v-model="editForm.phone"
+            label="Teléfono"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+        </div>
+        <v-text-field
+          v-model="editForm.address"
+          label="Dirección"
+          variant="outlined"
+          density="compact"
+          hide-details="auto"
+          class="mb-4"
+        />
+
+        <!-- Emergency contact -->
+        <div class="pd-edit-section-label">Contacto de urgencia</div>
+        <div class="pd-edit-grid">
+          <v-text-field
+            v-model="editForm.emergencyContactName"
+            label="Nombre"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+          <v-text-field
+            v-model="editForm.emergencyContactPhone"
+            label="Teléfono"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+        </div>
+        <v-text-field
+          v-model="editForm.emergencyContactRelation"
+          label="Relación"
+          variant="outlined"
+          density="compact"
+          hide-details="auto"
+          class="mb-4"
+        />
+
+        <!-- Administrative -->
+        <div class="pd-edit-section-label">Administrativo</div>
+        <div class="pd-edit-grid">
+          <v-text-field
+            v-model="editForm.internalReference"
+            label="Ref. interna"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+          <v-text-field
+            v-model="editForm.source"
+            label="Cómo nos conoció"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+          />
+        </div>
+        <v-textarea
+          v-model="editForm.notesAdministrative"
+          label="Notas administrativas"
+          variant="outlined"
+          density="compact"
+          rows="3"
+          hide-details="auto"
+          auto-grow
+        />
+
+        <v-alert
+          v-if="editError"
+          type="error"
+          variant="tonal"
+          density="compact"
+          class="mt-3"
+        >{{ editError }}</v-alert>
+      </v-card-text>
+
+      <v-card-actions class="px-5 pb-4">
+        <v-spacer />
+        <v-btn variant="text" @click="editDialog = false">Cancelar</v-btn>
+        <v-btn
+          color="primary"
+          variant="flat"
+          :loading="editSaving"
+          @click="saveEdit"
+        >Guardar cambios</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPatient, updatePatient } from '~/services/patientService'
+import { getPatient, updatePatient, type UpdatePatientPayload } from '~/services/patientService'
 import { getPatientProcesses } from '~/services/processService'
 import { useNotificationStore } from '~/stores/notification'
 
@@ -209,11 +369,122 @@ const PROCESS_STATUS_LABELS: Record<string, string> = {
   closed: 'Cerrado',
 }
 
+function resolveName(p: any): string {
+  if (!p) return ''
+  const full = p.fullName?.trim()
+  if (full) return full
+  const first = p.firstName ?? p.first_name ?? ''
+  const last  = p.lastName  ?? p.last_name  ?? ''
+  return `${first} ${last}`.trim()
+}
+
+const displayName = computed(() => resolveName(patient.value) || '—')
+
 const initials = computed(() => {
-  if (!patient.value) return ''
-  const name = patient.value.fullName || `${patient.value.firstName ?? ''} ${patient.value.lastName ?? ''}`.trim()
+  const name = resolveName(patient.value)
+  if (!name) return ''
   return name.split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('')
 })
+
+// ── Edit dialog ───────────────────────────────────────────────────────────────
+const editDialog      = ref(false)
+const editSaving      = ref(false)
+const editError       = ref<string | null>(null)
+const editFieldErrors = ref<Record<string, string>>({})
+const editForm        = ref<UpdatePatientPayload>({})
+
+/** Convert empty string to null; keep non-empty strings as-is */
+function strOrNull(v: any): string | null {
+  const s = (v ?? '').toString().trim()
+  return s || null
+}
+
+function openEditDialog() {
+  const p = patient.value as any
+  if (!p) return
+  editForm.value = {
+    firstName:                p.firstName               ?? p.first_name                ?? '',
+    lastName:                 p.lastName                ?? p.last_name                 ?? '',
+    birthDate:                p.birthDate               ?? p.birth_date                ?? null,
+    phone:                    p.phone                   ?? null,
+    email:                    p.email                   ?? null,
+    documentNumber:           p.documentNumber          ?? p.document_number           ?? null,
+    address:                  p.address                 ?? null,
+    isMinor:                  p.isMinor                 ?? p.is_minor                  ?? false,
+    internalReference:        p.internalReference       ?? p.internal_reference        ?? null,
+    notesAdministrative:      p.notesAdministrative     ?? p.notes_administrative      ?? null,
+    emergencyContactName:     p.emergencyContactName    ?? p.emergency_contact_name    ?? null,
+    emergencyContactPhone:    p.emergencyContactPhone   ?? p.emergency_contact_phone   ?? null,
+    emergencyContactRelation: p.emergencyContactRelation ?? p.emergency_contact_relation ?? null,
+    source:                   p.source                  ?? null,
+  }
+  editError.value = null
+  editFieldErrors.value = {}
+  editDialog.value = true
+}
+
+async function saveEdit() {
+  editFieldErrors.value = {}
+  editError.value = null
+
+  // Required field validation
+  const errs: Record<string, string> = {}
+  if (!editForm.value.firstName?.toString().trim()) errs.firstName = 'El nombre es obligatorio.'
+  if (!editForm.value.lastName?.toString().trim())  errs.lastName  = 'Los apellidos son obligatorios.'
+  if (Object.keys(errs).length) { editFieldErrors.value = errs; return }
+
+  // Normalize: empty strings → null, trim required strings
+  const payload: UpdatePatientPayload = {
+    firstName:                editForm.value.firstName!.trim(),
+    lastName:                 editForm.value.lastName!.trim(),
+    birthDate:                strOrNull(editForm.value.birthDate),
+    phone:                    strOrNull(editForm.value.phone),
+    email:                    strOrNull(editForm.value.email),
+    documentNumber:           strOrNull(editForm.value.documentNumber),
+    address:                  strOrNull(editForm.value.address),
+    isMinor:                  editForm.value.isMinor ?? false,
+    internalReference:        strOrNull(editForm.value.internalReference),
+    notesAdministrative:      strOrNull(editForm.value.notesAdministrative),
+    emergencyContactName:     strOrNull(editForm.value.emergencyContactName),
+    emergencyContactPhone:    strOrNull(editForm.value.emergencyContactPhone),
+    emergencyContactRelation: strOrNull(editForm.value.emergencyContactRelation),
+    source:                   strOrNull(editForm.value.source),
+  }
+
+  editSaving.value = true
+  try {
+    const updated = await updatePatient(id, payload) as any
+    patient.value = updated?.person ? { ...updated, ...updated.person } : updated
+    editDialog.value = false
+    notification.notify({ message: 'Información actualizada', color: 'success' })
+  } catch (e: any) {
+    const status = e?.response?.status
+    const msgs: string[] = [].concat(e?.response?.data?.message ?? [])
+    if (status === 400 && msgs.length) {
+      const fieldMap: Record<string, string> = {
+        firstName: 'firstName', lastName: 'lastName', email: 'email',
+        phone: 'phone', birthDate: 'birthDate', address: 'address',
+        documentNumber: 'documentNumber', isMinor: 'isMinor',
+        internalReference: 'internalReference', source: 'source',
+        notesAdministrative: 'notesAdministrative',
+        emergencyContactName: 'emergencyContactName',
+        emergencyContactPhone: 'emergencyContactPhone',
+        emergencyContactRelation: 'emergencyContactRelation',
+      }
+      const fieldErrors: Record<string, string> = {}
+      for (const msg of msgs) {
+        const matched = Object.keys(fieldMap).find(k => msg.toLowerCase().includes(k.toLowerCase()))
+        if (matched) fieldErrors[fieldMap[matched]!] = msg
+        else editError.value = msg
+      }
+      if (Object.keys(fieldErrors).length) editFieldErrors.value = fieldErrors
+    } else {
+      editError.value = msgs[0] ?? 'No se pudo guardar los cambios.'
+    }
+  } finally {
+    editSaving.value = false
+  }
+}
 
 function formatDate(d?: string | null): string {
   if (!d) return '—'
@@ -222,7 +493,9 @@ function formatDate(d?: string | null): string {
 
 async function fetchPatient() {
   try {
-    patient.value = await getPatient(id)
+    const raw = await getPatient(id) as any
+    // Some API builds nest personal fields under a 'person' sub-object
+    patient.value = raw?.person ? { ...raw, ...raw.person } : raw
   } catch {
     error.value = 'No se pudo cargar el paciente.'
   }
@@ -479,5 +752,27 @@ onMounted(async () => {
   padding: $space-6 0;
   color: $color-text-muted;
   font-size: $font-size-sm;
+}
+
+// ── Edit dialog ───────────────────────────────────────────────────────────────
+.pd-edit-section-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-text-muted;
+  margin-bottom: $space-3;
+  margin-top: $space-4;
+
+  &:first-child { margin-top: 0; }
+}
+
+.pd-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-3;
+  margin-bottom: $space-3;
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
 }
 </style>

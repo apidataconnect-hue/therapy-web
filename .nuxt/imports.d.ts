@@ -45,4 +45,3 @@ export { useWorkspaceStore, WorkspaceState, Workspace } from '../app/stores/work
 export { useDate, useLocale, useDefaults, useDisplay, useLayout, useRtl, useTheme, useGoTo, useHotkey, useMask } from 'vuetify';
 export { useRules } from 'vuetify/labs/rules';
 export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
-export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

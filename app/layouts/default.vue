@@ -2,8 +2,45 @@
 
 <template>
   <v-app>
-    <!-- Navegación lateral -->
+    <!-- === PATIENT TOP NAVBAR === -->
+    <v-app-bar v-if="role === 'PATIENT'" flat class="ptb-navbar">
+      <div class="ptb-navbar__brand">
+        <div class="ptb-navbar__logo">
+          <v-icon icon="mdi-heart-pulse" color="white" size="20" />
+        </div>
+        <span class="ptb-navbar__name">TherapyWeb</span>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        icon
+        variant="text"
+        class="ptb-navbar__avatar"
+        @click="patientMenu = !patientMenu"
+      >
+        <v-icon icon="mdi-account-circle" size="28" />
+        <v-menu v-model="patientMenu" activator="parent" :close-on-content-click="true">
+          <v-list density="compact" min-width="200">
+            <v-list-item
+              v-if="hasMultipleProfiles"
+              prepend-icon="mdi-swap-horizontal"
+              title="Cambiar terapeuta"
+              @click="switchProfile"
+            />
+            <v-list-item
+              prepend-icon="mdi-logout-variant"
+              title="Cerrar sesión"
+              @click="logout"
+            />
+          </v-list>
+        </v-menu>
+      </v-btn>
+    </v-app-bar>
+
+    <!-- === THERAPIST SIDEBAR === -->
     <v-navigation-drawer
+      v-if="role !== 'PATIENT'"
       v-model="drawer"
       :rail="rail"
       :expand-on-hover="rail"
@@ -39,20 +76,6 @@
           <div v-if="!rail" class="nav-section-label">Gestión</div>
           <v-list-item
             v-for="item in therapistNav"
-            :key="item.to"
-            :to="item.to"
-            :prepend-icon="item.icon"
-            :title="item.label"
-            class="nav-item"
-            active-class="nav-item--active"
-          />
-        </template>
-
-        <!-- PATIENT -->
-        <template v-else-if="role === 'PATIENT'">
-          <div v-if="!rail" class="nav-section-label">Mi área</div>
-          <v-list-item
-            v-for="item in patientNav"
             :key="item.to"
             :to="item.to"
             :prepend-icon="item.icon"
@@ -136,25 +159,34 @@ const notification = computed(() => notificationStore.notification)
 const showNotification = computed(() => notificationStore.show)
 const drawer = ref(true)
 const rail = ref(false)
+const patientMenu = ref(false)
+const hasMultipleProfiles = ref(false)
+
+// Check if patient has multiple profiles on mount
+if (auth.isPatient) {
+  import('~/services/patientPortalService').then(({ getProfiles }) => {
+    getProfiles().then(profiles => {
+      hasMultipleProfiles.value = profiles.length > 1
+    }).catch(() => {})
+  })
+}
 
 const therapistNav = [
   { to: '/app/dashboard',                 icon: 'mdi-view-dashboard-outline',  label: 'Panel' },
   { to: '/app/patients',                  icon: 'mdi-account-group-outline',    label: 'Pacientes' },
   { to: '/app/therapist/sessions',        icon: 'mdi-calendar-check-outline',  label: 'Sesiones' },
   { to: '/app/therapist/therapies',       icon: 'mdi-clipboard-pulse-outline', label: 'Terapias' },
-  { to: '/app/therapist/calendar',        icon: 'mdi-calendar-month-outline',  label: 'Calendario' },
+  { to: '/app/therapist/calendar',        icon: 'mdi-calendar-month-outline',  label: 'Agenda' },
   { to: '/app/therapist/ai-templates',    icon: 'mdi-creation-outline',        label: 'Plantillas IA' },
-]
-
-const patientNav = [
-  { to: '/app/dashboard', icon: 'mdi-home-outline',             label: 'Inicio' },
-  { to: '/app/sessions',  icon: 'mdi-calendar-check-outline',  label: 'Mis sesiones' },
-  { to: '/app/therapies', icon: 'mdi-clipboard-pulse-outline', label: 'Mis terapias' },
-  { to: '/app/calendar',  icon: 'mdi-calendar-month-outline',  label: 'Calendario' },
 ]
 
 function closeNotification() {
   notificationStore.close()
+}
+
+function switchProfile() {
+  auth.setProfileId(null)
+  router.push('/app/select-profile')
 }
 
 async function logout() {
@@ -168,8 +200,8 @@ async function logout() {
 @use '~/assets/styles/tokens' as *;
 
 .nav-drawer {
-  background: var(--app-nav-bg, #{$nav-bg}) !important;
-  border-right: none !important;
+  background: $color-surface !important;
+  border-right: 1px solid $color-border !important;
 }
 
 .nav-brand {
@@ -199,18 +231,18 @@ async function logout() {
 .nav-brand__name {
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
-  color: white;
+  color: $color-text-main;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 .nav-brand__toggle {
-  color: rgba(white, 0.4) !important;
+  color: $color-text-muted !important;
   margin-left: auto;
 }
 
 .nav-divider {
-  border-color: rgba(white, 0.08) !important;
+  border-color: $color-divider !important;
   margin: 0 $space-3;
 }
 
@@ -223,19 +255,21 @@ async function logout() {
   font-weight: $font-weight-semibold;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba($nav-text, 0.4);
+  color: $color-text-muted;
   padding: $space-3 $space-3 $space-1;
 }
 
 :deep(.nav-item) {
   border-radius: $radius-md !important;
-  color: $nav-text !important;
+  color: $color-text-secondary !important;
   margin: 1px 0;
   transition: background $transition-fast, color $transition-fast;
 
   &:hover {
-    background: $nav-item-hover-bg !important;
-    color: white !important;
+    background: $color-hover !important;
+    color: $color-text-main !important;
+
+    .v-icon { opacity: 1; }
   }
 
   .v-list-item-title {
@@ -243,25 +277,63 @@ async function logout() {
     font-weight: $font-weight-medium;
   }
 
-  .v-icon { opacity: 0.75; }
+  .v-icon { opacity: 0.65; }
 }
 
 :deep(.nav-item--active) {
-  background: $nav-item-active-bg !important;
-  color: white !important;
+  background: $color-primary-subtle !important;
+  color: $color-primary !important;
+  box-shadow: inset 3px 0 0 $color-primary;
 
-  .v-icon { opacity: 1; color: $color-primary-light !important; }
+  .v-icon { opacity: 1; color: $color-primary !important; }
 }
 
 :deep(.nav-item--logout) {
   &:hover {
-    background: rgba(#C0392B, 0.15) !important;
-    color: #f8a0a0 !important;
+    background: $color-error-subtle !important;
+    color: $color-error !important;
+
+    .v-icon { opacity: 1; color: $color-error !important; }
   }
 }
 
 .app-main {
   background: $color-background;
+}
+
+// Patient top navbar
+.ptb-navbar {
+  background: $color-surface !important;
+  border-bottom: 1px solid $color-border !important;
+  box-shadow: none !important;
+  padding: 0 $space-4;
+}
+
+.ptb-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.ptb-navbar__logo {
+  width: 32px;
+  height: 32px;
+  background: $color-secondary;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ptb-navbar__name {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+  letter-spacing: -0.01em;
+}
+
+.ptb-navbar__avatar {
+  color: $color-text-secondary !important;
 }
 
 .fade-enter-active,

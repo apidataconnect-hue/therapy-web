@@ -33,11 +33,15 @@ const profile = ref<any>(null)
 const error = ref('')
 
 onMounted(async () => {
+  // Patients see their profile in the dashboard tab
+  if (auth.isPatient) {
+    await navigateTo('/app/dashboard')
+    return
+  }
   try {
     if (role.value === 'THERAPIST') {
       profile.value = await getTherapistProfile()
     } else {
-      // For patients the user object itself is the profile
       profile.value = auth.user
     }
   } catch {

@@ -99,15 +99,24 @@ async function onLogin() {
 
   loading.value = true
   try {
-    const { user, token, refreshToken } = await login(email.value, password.value)
+    const { user, token, refreshToken, profiles } = await login(email.value, password.value)
     auth.setAuth(user, token, refreshToken)
+
+    if (auth.isPatient && profiles) {
+      if (profiles.length === 1) {
+        auth.setProfileId(profiles[0].id)
+        await navigateTo('/app/dashboard')
+      } else {
+        await navigateTo('/app/select-profile')
+      }
+    } else {
+      await navigateTo('/app/dashboard')
+    }
   } catch {
     errorMessage.value = 'Credenciales incorrectas. Verifica tu correo y contraseña.'
+  } finally {
     loading.value = false
-    return
   }
-  loading.value = false
-  await navigateTo('/app/dashboard')
 }
 </script>
 

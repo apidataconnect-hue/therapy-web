@@ -4,10 +4,151 @@
 
     <!-- ── PATIENT ────────────────────────────────────────────────────────────── -->
     <template v-if="role === 'PATIENT'">
-      <v-card>
-        <v-card-title>Mi información</v-card-title>
-        <v-card-text><NuxtLink to="/app/profile">Ver mi perfil</NuxtLink></v-card-text>
-      </v-card>
+      <!-- Header -->
+      <div class="ptb-header">
+        <div class="ptb-header__info">
+          <h1 class="ptb-header__title">{{ currentProfile?.therapist?.name ?? 'Mi portal' }}</h1>
+          <p v-if="currentProfile?.therapist?.specialty" class="ptb-header__subtitle">
+            {{ currentProfile.therapist.specialty }}
+          </p>
+        </div>
+        <v-btn
+          v-if="hasMultipleProfiles"
+          variant="tonal"
+          color="secondary"
+          size="small"
+          prepend-icon="mdi-swap-horizontal"
+          @click="switchProfile"
+        >
+          Cambiar terapeuta
+        </v-btn>
+      </div>
+
+      <!-- Tabs -->
+      <v-tabs v-model="patientTab" color="secondary" class="ptb-tabs">
+        <v-tab value="appointments">Mis citas</v-tab>
+        <v-tab value="profile">Mi perfil</v-tab>
+      </v-tabs>
+
+      <v-tabs-window v-model="patientTab">
+        <!-- Tab: Appointments -->
+        <v-tabs-window-item value="appointments">
+          <div v-if="patientLoading" class="ptb-center">
+            <v-progress-circular indeterminate color="secondary" />
+          </div>
+          <template v-else>
+            <!-- Upcoming -->
+            <div v-if="upcomingAppointments.length" class="ptb-section">
+              <h3 class="ptb-section__title">Próximas</h3>
+              <div class="ptb-appointments">
+                <div
+                  v-for="apt in upcomingAppointments"
+                  :key="apt.id"
+                  class="ptb-apt"
+                >
+                  <div class="ptb-apt__date">
+                    <v-icon icon="mdi-calendar" size="18" color="secondary" class="mr-2" />
+                    {{ formatDate(apt.startAt) }}
+                  </div>
+                  <div class="ptb-apt__time">
+                    {{ formatTime(apt.startAt) }} – {{ formatTime(apt.endAt) }}
+                  </div>
+                  <div class="ptb-apt__meta">
+                    <v-chip
+                      size="x-small"
+                      variant="tonal"
+                      :color="appointmentTypeColor(apt.appointmentType)"
+                      :prepend-icon="appointmentTypeIcon(apt.appointmentType)"
+                    >
+                      {{ appointmentTypeLabel(apt.appointmentType) }}
+                    </v-chip>
+                    <v-chip size="x-small" variant="tonal" :color="appointmentStatusColor(apt.appointmentStatus)">
+                      {{ appointmentStatusLabel(apt.appointmentStatus) }}
+                    </v-chip>
+                  </div>
+                  <v-btn
+                    v-if="apt.appointmentType === 'online' && apt.meetingUrl"
+                    size="small"
+                    color="secondary"
+                    variant="tonal"
+                    prepend-icon="mdi-video-outline"
+                    :href="apt.meetingUrl"
+                    target="_blank"
+                    class="ptb-apt__join"
+                  >
+                    Unirse
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty upcoming -->
+            <div v-if="!upcomingAppointments.length && !pastAppointments.length" class="ptb-empty">
+              <v-icon icon="mdi-calendar-blank-outline" size="48" color="disabled" />
+              <p>No tienes citas programadas</p>
+            </div>
+
+            <!-- Past -->
+            <div v-if="pastAppointments.length" class="ptb-section">
+              <button class="ptb-section__toggle" @click="showPast = !showPast">
+                <h3 class="ptb-section__title">Anteriores</h3>
+                <v-icon :icon="showPast ? 'mdi-chevron-up' : 'mdi-chevron-down'" size="20" />
+              </button>
+              <div v-if="showPast" class="ptb-appointments">
+                <div
+                  v-for="apt in pastAppointments"
+                  :key="apt.id"
+                  class="ptb-apt ptb-apt--past"
+                >
+                  <div class="ptb-apt__date">
+                    <v-icon icon="mdi-calendar" size="18" color="grey" class="mr-2" />
+                    {{ formatDate(apt.startAt) }}
+                  </div>
+                  <div class="ptb-apt__time">
+                    {{ formatTime(apt.startAt) }} – {{ formatTime(apt.endAt) }}
+                  </div>
+                  <div class="ptb-apt__meta">
+                    <v-chip size="x-small" variant="tonal" :color="appointmentTypeColor(apt.appointmentType)">
+                      {{ appointmentTypeLabel(apt.appointmentType) }}
+                    </v-chip>
+                    <v-chip size="x-small" variant="tonal" :color="appointmentStatusColor(apt.appointmentStatus)">
+                      {{ appointmentStatusLabel(apt.appointmentStatus) }}
+                    </v-chip>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </v-tabs-window-item>
+
+        <!-- Tab: Profile -->
+        <v-tabs-window-item value="profile">
+          <div v-if="currentProfile" class="ptb-profile">
+            <div class="ptb-profile__row">
+              <span class="ptb-profile__label">Nombre</span>
+              <span class="ptb-profile__value">{{ currentProfile.patientName }}</span>
+            </div>
+            <div v-if="currentProfile.email" class="ptb-profile__row">
+              <span class="ptb-profile__label">Correo electrónico</span>
+              <span class="ptb-profile__value">{{ currentProfile.email }}</span>
+            </div>
+            <div v-if="currentProfile.phone" class="ptb-profile__row">
+              <span class="ptb-profile__label">Teléfono</span>
+              <span class="ptb-profile__value">{{ currentProfile.phone }}</span>
+            </div>
+            <div class="ptb-profile__row">
+              <span class="ptb-profile__label">Estado</span>
+              <v-chip size="small" variant="tonal" :color="currentProfile.patientStatus === 'active' ? 'success' : 'grey'">
+                {{ currentProfile.patientStatus === 'active' ? 'Activo' : currentProfile.patientStatus }}
+              </v-chip>
+            </div>
+            <div class="ptb-profile__row">
+              <span class="ptb-profile__label">Terapeuta</span>
+              <span class="ptb-profile__value">{{ currentProfile.therapist.name }}</span>
+            </div>
+          </div>
+        </v-tabs-window-item>
+      </v-tabs-window>
     </template>
 
     <!-- ── ADMIN ──────────────────────────────────────────────────────────────── -->
@@ -135,12 +276,86 @@ import { useAuthStore } from '~/stores/auth'
 import { useTagStore } from '~/stores/tag'
 import { getProcesses } from '~/services/processService'
 import { getPatients } from '~/services/patientService'
+import { getProfiles, getMyAppointments, type PatientProfile, type PatientAppointment } from '~/services/patientPortalService'
 
 definePageMeta({ middleware: ['auth'] })
 
 const auth     = useAuthStore()
 const tagStore = useTagStore()
 const role     = computed(() => auth.userRole)
+
+// ── Patient state ─────────────────────────────────────────────────────────────
+const patientTab          = ref('appointments')
+const patientLoading      = ref(true)
+const patientProfiles     = ref<PatientProfile[]>([])
+const patientAppointments = ref<PatientAppointment[]>([])
+const showPast            = ref(false)
+
+const currentProfile = computed(() =>
+  patientProfiles.value.find(p => p.id === auth.selectedProfileId) ?? patientProfiles.value[0] ?? null,
+)
+const hasMultipleProfiles = computed(() => patientProfiles.value.length > 1)
+
+const upcomingAppointments = computed(() => {
+  const now = new Date().toISOString()
+  return patientAppointments.value
+    .filter(a => a.startAt >= now && a.appointmentStatus !== 'cancelled')
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+})
+
+const pastAppointments = computed(() => {
+  const now = new Date().toISOString()
+  return patientAppointments.value
+    .filter(a => a.startAt < now || a.appointmentStatus === 'cancelled')
+    .sort((a, b) => b.startAt.localeCompare(a.startAt))
+})
+
+async function loadPatientDashboard() {
+  patientLoading.value = true
+  try {
+    patientProfiles.value = await getProfiles()
+    if (auth.selectedProfileId) {
+      patientAppointments.value = await getMyAppointments(auth.selectedProfileId)
+    }
+  } catch (e) {
+    console.error('[patient-dashboard] load error', e)
+  } finally {
+    patientLoading.value = false
+  }
+}
+
+function switchProfile() {
+  auth.setProfileId(null)
+  navigateTo('/app/select-profile')
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+}
+
+function appointmentTypeLabel(t: string) {
+  const map: Record<string, string> = { in_person: 'Presencial', online: 'Online', phone: 'Teléfono', home_visit: 'Domicilio' }
+  return map[t] ?? t
+}
+function appointmentTypeIcon(t: string) {
+  const map: Record<string, string> = { in_person: 'mdi-map-marker-outline', online: 'mdi-video-outline', phone: 'mdi-phone-outline', home_visit: 'mdi-home-outline' }
+  return map[t] ?? 'mdi-calendar'
+}
+function appointmentTypeColor(t: string) {
+  const map: Record<string, string> = { in_person: 'primary', online: 'info', phone: 'warning', home_visit: 'secondary' }
+  return map[t] ?? 'grey'
+}
+function appointmentStatusLabel(s: string) {
+  const map: Record<string, string> = { scheduled: 'Programada', confirmed: 'Confirmada', completed: 'Completada', cancelled: 'Cancelada', no_show: 'No asistió' }
+  return map[s] ?? s
+}
+function appointmentStatusColor(s: string) {
+  const map: Record<string, string> = { scheduled: 'info', confirmed: 'success', completed: 'grey', cancelled: 'error', no_show: 'warning' }
+  return map[s] ?? 'grey'
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const loading       = ref(true)
@@ -164,8 +379,14 @@ async function loadDashboard() {
   }
 }
 
-onMounted(loadDashboard)
-onActivated(loadDashboard)
+onMounted(() => {
+  if (auth.isPatient) loadPatientDashboard()
+  else loadDashboard()
+})
+onActivated(() => {
+  if (auth.isPatient) loadPatientDashboard()
+  else loadDashboard()
+})
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
 const statusCount = computed(() => {
@@ -292,7 +513,7 @@ const quickLinks = [
   { to: '/app/therapist/therapies', title: 'Terapias',   desc: 'Gestiona los procesos',      icon: 'mdi-clipboard-pulse-outline', color: '#5B2A86', bg: '#F2EBF9' },
   { to: '/app/patients',            title: 'Pacientes',  desc: 'Consulta tus pacientes',     icon: 'mdi-account-group-outline',   color: '#1A7A8A', bg: '#e4f5f7' },
   { to: '/app/therapist/sessions',  title: 'Sesiones',   desc: 'Historial de citas',         icon: 'mdi-calendar-check-outline',  color: '#2E8B57', bg: '#edf7f1' },
-  { to: '/app/therapist/calendar',  title: 'Calendario', desc: 'Planifica nuevas citas',     icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
+  { to: '/app/therapist/calendar',  title: 'Agenda', desc: 'Planifica nuevas citas',     icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
 ]
 </script>
 
@@ -525,5 +746,144 @@ const quickLinks = [
 @keyframes db-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
+}
+
+// ── Patient portal ────────────────────────────────────────────────────────────
+.ptb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-4;
+
+  &__title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-main;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: $space-1 0 0;
+  }
+}
+
+.ptb-tabs {
+  margin-bottom: $space-4;
+}
+
+.ptb-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.ptb-section {
+  margin-bottom: $space-4;
+
+  &__title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    margin: 0 0 $space-3;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: $space-3;
+  }
+}
+
+.ptb-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.ptb-apt {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  flex-wrap: wrap;
+
+  &--past {
+    opacity: 0.65;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    text-transform: capitalize;
+  }
+
+  &__time {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  &__meta {
+    display: flex;
+    gap: $space-1;
+    flex: 1;
+  }
+
+  &__join {
+    margin-left: auto;
+  }
+}
+
+.ptb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.ptb-profile {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-4;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    padding: $space-3 0;
+    border-bottom: 1px solid $color-divider;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &__label {
+    width: 180px;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-muted;
+  }
+
+  &__value {
+    font-size: $font-size-sm;
+    color: $color-text-main;
+  }
 }
 </style>

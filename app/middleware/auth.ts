@@ -7,4 +7,9 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (!auth.isAuthenticated) {
     return navigateTo('/login')
   }
+
+  // Block patients from accessing therapist-only routes
+  if (auth.isPatient && to.path.startsWith('/app/therapist')) {
+    return navigateTo('/app/dashboard')
+  }
 })
