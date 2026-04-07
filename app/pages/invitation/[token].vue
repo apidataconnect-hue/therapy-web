@@ -30,22 +30,51 @@
       </v-card>
 
       <!-- Linked (existing account) -->
-      <v-card v-else-if="linked" class="login-card" elevation="0">
+      <v-card v-else-if="successMessage" class="login-card" elevation="0">
         <div class="login-card__header">
           <v-icon icon="mdi-check-circle-outline" size="48" color="success" class="mb-3" />
-          <h1 class="login-card__title">Terapeuta vinculado</h1>
-          <p class="login-card__subtitle">Se ha vinculado este terapeuta a tu cuenta. Ya puedes acceder a tu portal.</p>
+          <h1 class="login-card__title">¡Listo!</h1>
+          <p class="login-card__subtitle">{{ successMessage }}</p>
+          <p class="login-card__subtitle mt-2">Redirigiendo...</p>
         </div>
-        <v-btn color="primary" size="large" block rounded="md" to="/login">
-          Ir al portal
+      </v-card>
+
+      <!-- Accept form: existing account (no password needed) -->
+      <v-card v-else-if="invitation?.accountExists" class="login-card" elevation="0">
+        <div class="login-card__header">
+          <v-icon icon="mdi-account-check-outline" size="48" color="primary" class="mb-3" />
+          <h1 class="login-card__title">Bienvenido/a, {{ invitation?.firstName }}</h1>
+          <p class="login-card__subtitle">Haz clic para aceptar y acceder con tu cuenta existente.</p>
+        </div>
+
+        <v-alert
+          v-if="submitError"
+          type="error"
+          variant="tonal"
+          rounded="md"
+          density="compact"
+          class="mb-4"
+        >
+          {{ submitError }}
+        </v-alert>
+
+        <v-btn
+          color="primary"
+          size="large"
+          block
+          rounded="md"
+          :loading="accepting"
+          @click="onAccept"
+        >
+          Aceptar invitación
         </v-btn>
       </v-card>
 
-      <!-- Registration form -->
+      <!-- Registration form: new account (password required) -->
       <v-card v-else class="login-card" elevation="0">
         <div class="login-card__header">
           <h1 class="login-card__title">Completa tu registro</h1>
-          <p class="login-card__subtitle">Hola {{ invitation?.email }}, crea una contraseña para acceder.</p>
+          <p class="login-card__subtitle">Hola {{ invitation?.firstName }}, crea una contraseña para acceder.</p>
         </div>
 
         <v-form class="login-card__form" @submit.prevent="onAccept">
@@ -127,17 +156,17 @@ const error = ref('')
 const password = ref('')
 const passwordConfirm = ref('')
 const showPassword = ref(false)
-const passwordError = ref('')
+const passwordError = ref<string | string[]>('')
 const confirmError = ref('')
 const submitError = ref('')
 const accepting = ref(false)
-const linked = ref(false)
+const successMessage = ref('')
 
 onMounted(async () => {
   try {
     invitation.value = await getInvitationByToken(token)
     if (invitation.value.status !== 'PENDING') {
-      error.value = 'Esta invitación ya fue utilizada, cancelada o expirada.'
+      error.value = 'Esta invitación ya fue usada o ha expirado.'
     }
   } catch {
     error.value = 'Invitación no válida o expirada.'
@@ -151,39 +180,64 @@ async function onAccept() {
   confirmError.value = ''
   submitError.value = ''
 
-  if (!password.value || password.value.length < 8) {
-    passwordError.value = 'La contraseña debe tener al menos 8 caracteres.'
-    return
-  }
-  if (password.value !== passwordConfirm.value) {
-    confirmError.value = 'Las contraseñas no coinciden.'
-    return
+  // Validate password only when creating a new account
+  if (!invitation.value?.accountExists) {
+    if (!password.value || password.value.length < 8) {
+      passwordError.value = 'La contraseña debe tener al menos 8 caracteres.'
+      return
+    }
+    if (!/[A-Z]/.test(password.value)) {
+      passwordError.value = 'La contraseña debe contener al menos una letra mayúscula.'
+      return
+    }
+    if (!/[0-9]/.test(password.value)) {
+      passwordError.value = 'La contraseña debe contener al menos un número.'
+      return
+    }
+    if (password.value !== passwordConfirm.value) {
+      confirmError.value = 'Las contraseñas no coinciden.'
+      return
+    }
   }
 
   accepting.value = true
   try {
-    const result = await acceptInvitation(token, { password: password.value })
+    const payload = invitation.value?.accountExists ? {} : { password: password.value }
+    const result = await acceptInvitation(token, payload)
 
-    // Auto-login if backend returns auth tokens
-    if (result?.token && result?.user) {
-      auth.setAuth(result.user, result.token, result.refreshToken)
-      try {
-        const profiles = await getProfiles()
-        if (profiles.length === 1) {
-          auth.setProfileId(profiles[0].id)
-          await navigateTo('/app/dashboard')
-        } else {
-          await navigateTo('/app/select-profile')
-        }
-      } catch {
-        await navigateTo('/app/dashboard')
+    auth.setAuth(result.user, result.token, result.refreshToken)
+
+    try {
+      const profiles = await getProfiles()
+      if (profiles.length === 1) {
+        auth.setProfileId(profiles[0].id)
+        successMessage.value = 'Invitación aceptada. Redirigiendo...'
+        setTimeout(() => navigateTo('/patient'), 1500)
+      } else if (profiles.length > 1) {
+        successMessage.value = 'Invitación aceptada. Redirigiendo...'
+        setTimeout(() => navigateTo('/patient/select-profile'), 1500)
+      } else {
+        await navigateTo('/patient')
       }
-    } else {
-      // Existing account — just linked the therapist
-      linked.value = true
+    } catch {
+      await navigateTo('/patient')
     }
   } catch (e: any) {
-    submitError.value = e?.response?.data?.message || 'No se pudo aceptar la invitación.'
+    const code = e?.response?.data?.code
+    if (code === 'INVITATION_NOT_PENDING') {
+      submitError.value = 'Esta invitación no está activa.'
+    } else if (code === 'INVITATION_EXPIRED') {
+      submitError.value = 'Esta invitación ha expirado.'
+    } else if (code === 'PASSWORD_REQUIRED') {
+      submitError.value = 'Se requiere contraseña para crear la cuenta.'
+    } else {
+      const fieldErrors = e?.response?.data?.data
+      if (fieldErrors?.password?.length) {
+        passwordError.value = fieldErrors.password
+      } else {
+        submitError.value = e?.response?.data?.message || 'No se pudo aceptar la invitación.'
+      }
+    }
   } finally {
     accepting.value = false
   }

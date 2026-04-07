@@ -80,6 +80,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { login } from '~/services/authService'
+import { getProfiles } from '~/services/patientPortalService'
 
 definePageMeta({ layout: false })
 
@@ -99,15 +100,22 @@ async function onLogin() {
 
   loading.value = true
   try {
-    const { user, token, refreshToken, profiles } = await login(email.value, password.value)
+    const { user, token, refreshToken } = await login(email.value, password.value)
     auth.setAuth(user, token, refreshToken)
 
-    if (auth.isPatient && profiles) {
-      if (profiles.length === 1) {
-        auth.setProfileId(profiles[0].id)
-        await navigateTo('/app/dashboard')
-      } else {
-        await navigateTo('/app/select-profile')
+    if (auth.isPatient) {
+      try {
+        const profiles = await getProfiles()
+        if (profiles.length === 1) {
+          auth.setProfileId(profiles[0].id)
+          await navigateTo('/patient')
+        } else if (profiles.length > 1) {
+          await navigateTo('/patient/select-profile')
+        } else {
+          await navigateTo('/patient')
+        }
+      } catch {
+        await navigateTo('/patient')
       }
     } else {
       await navigateTo('/app/dashboard')

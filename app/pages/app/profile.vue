@@ -24,7 +24,8 @@ import { useAuthStore } from '~/stores/auth'
 import { getProfile as getTherapistProfile } from '~/services/therapistService'
 
 definePageMeta({
-  middleware: ['auth'],
+  middleware: ['auth', 'role'],
+  role: 'THERAPIST',
 })
 
 const auth = useAuthStore()
@@ -33,11 +34,6 @@ const profile = ref<any>(null)
 const error = ref('')
 
 onMounted(async () => {
-  // Patients see their profile in the dashboard tab
-  if (auth.isPatient) {
-    await navigateTo('/app/dashboard')
-    return
-  }
   try {
     if (role.value === 'THERAPIST') {
       profile.value = await getTherapistProfile()

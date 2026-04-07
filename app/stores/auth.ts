@@ -41,6 +41,7 @@ export const useAuthStore = defineStore('auth', {
     // Returns the primary role (first role without "ROLE_" prefix), e.g. "THERAPIST"
     userRole: (state) => (state.user?.roles ?? []).map(r => r.replace(/^ROLE_/, ''))[0] ?? null,
     isPatient: (state) => (state.user?.roles ?? []).some(r => r.includes('PATIENT')),
+    isTherapist: (state) => (state.user?.roles ?? []).some(r => r.includes('THERAPIST')),
   },
   actions: {
     setAuth(user: User, token: string, refreshToken?: string) {

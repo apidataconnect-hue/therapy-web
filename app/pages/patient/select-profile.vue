@@ -19,6 +19,11 @@
           <v-progress-circular indeterminate color="primary" />
         </div>
 
+        <div v-else-if="error" class="text-center py-8">
+          <v-icon icon="mdi-alert-circle-outline" size="48" color="error" class="mb-3" />
+          <p class="text-medium-emphasis">{{ error }}</p>
+        </div>
+
         <div v-else class="select-profile-grid">
           <v-card
             v-for="profile in profiles"
@@ -37,13 +42,16 @@
                 {{ profile.therapist.specialty }}
               </div>
             </div>
+            <v-chip size="x-small" variant="tonal" :color="statusColor(profile.patientStatus)" class="mr-2">
+              {{ statusLabel(profile.patientStatus) }}
+            </v-chip>
             <v-icon icon="mdi-chevron-right" size="20" color="grey" />
           </v-card>
         </div>
       </v-card>
 
       <div class="select-profile-back">
-        <a class="select-profile-back__link" @click="logout">
+        <a class="select-profile-back__link" @click="doLogout">
           <v-icon icon="mdi-logout-variant" size="14" />
           Cerrar sesión
         </a>
@@ -58,33 +66,43 @@ import { useAuthStore } from '~/stores/auth'
 import { getProfiles, type PatientProfile } from '~/services/patientPortalService'
 import { logout as apiLogout } from '~/services/authService'
 
-definePageMeta({ layout: false, middleware: ['auth'] })
+definePageMeta({ layout: false, middleware: ['auth', 'role'], role: 'PATIENT' })
 
 const auth = useAuthStore()
 const profiles = ref<PatientProfile[]>([])
 const loading = ref(true)
+const error = ref('')
 
 onMounted(async () => {
   try {
     profiles.value = await getProfiles()
-    // Auto-redirect if only 1 profile
-    if (profiles.value.length === 1) {
+    if (profiles.value.length === 0) {
+      error.value = 'No tienes ningún terapeuta vinculado.'
+    } else if (profiles.value.length === 1) {
       selectProfile(profiles.value[0])
     }
   } catch {
-    // If profiles fail, go to dashboard anyway
-    await navigateTo('/app/dashboard')
+    error.value = 'No se pudieron cargar los perfiles. Intenta de nuevo.'
   } finally {
     loading.value = false
   }
 })
 
-async function selectProfile(profile: PatientProfile) {
-  auth.setProfileId(profile.id)
-  await navigateTo('/app/dashboard')
+function statusLabel(s: string) {
+  const map: Record<string, string> = { active: 'Activo', inactive: 'Inactivo', discharged: 'Alta', archived: 'Archivado' }
+  return map[s] ?? s
+}
+function statusColor(s: string) {
+  const map: Record<string, string> = { active: 'success', inactive: 'grey', discharged: 'teal', archived: 'error' }
+  return map[s] ?? 'grey'
 }
 
-async function logout() {
+async function selectProfile(profile: PatientProfile) {
+  auth.setProfileId(profile.id)
+  await navigateTo('/patient')
+}
+
+async function doLogout() {
   await apiLogout()
   auth.clearAuth()
   await navigateTo('/login')
@@ -180,13 +198,8 @@ async function logout() {
   }
 }
 
-.select-profile-item__avatar {
-  flex-shrink: 0;
-}
-
 .select-profile-item__info {
   flex: 1;
-  min-width: 0;
 }
 
 .select-profile-item__name {
@@ -198,7 +211,6 @@ async function logout() {
 .select-profile-item__specialty {
   font-size: $font-size-sm;
   color: $color-text-secondary;
-  margin-top: 2px;
 }
 
 .select-profile-back {
@@ -211,11 +223,10 @@ async function logout() {
   align-items: center;
   gap: $space-1;
   font-size: $font-size-sm;
-  color: $color-text-secondary;
+  color: $color-text-muted;
   text-decoration: none;
   cursor: pointer;
-  transition: color $transition-fast;
 
-  &:hover { color: $color-primary; }
+  &:hover { color: $color-text-main; }
 }
 </style>

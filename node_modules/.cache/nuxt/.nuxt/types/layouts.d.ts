@@ -9,6 +9,7 @@ declare module 'nuxt/app' {
     auth: ComponentProps<typeof import("/Users/miguel/dev/projects/web/therapy-web/app/layouts/auth.vue").default>
     default: ComponentProps<typeof import("/Users/miguel/dev/projects/web/therapy-web/app/layouts/default.vue").default>
     landing: ComponentProps<typeof import("/Users/miguel/dev/projects/web/therapy-web/app/layouts/landing.vue").default>
+    patient: ComponentProps<typeof import("/Users/miguel/dev/projects/web/therapy-web/app/layouts/patient.vue").default>
   }
   export type LayoutKey = keyof NuxtLayouts extends never ? string : keyof NuxtLayouts
   interface PageMeta {

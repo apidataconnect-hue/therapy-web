@@ -9,18 +9,57 @@
           <v-btn v-bind="props" icon="mdi-dots-vertical" variant="text" size="small" />
         </template>
         <v-list density="compact">
+          <!-- draft → active -->
           <v-list-item
-            v-if="process.processStatus === 'disabled' || process.processStatus === 'archived'"
-            prepend-icon="mdi-play-circle-outline"
-            :title="process.processStatus === 'archived' ? 'Desarchivar terapia' : 'Habilitar terapia'"
-            @click="openConfirm(process.processStatus === 'archived' ? 'unarchive' : 'enable')"
+            v-if="process.processStatus === 'draft'"
+            prepend-icon="mdi-check-circle-outline"
+            title="Activar terapia"
+            @click="openConfirm('activate')"
           />
+          <!-- paused → active -->
           <v-list-item
-            v-if="process.processStatus !== 'disabled' && process.processStatus !== 'archived'"
+            v-if="process.processStatus === 'paused'"
+            prepend-icon="mdi-play-circle-outline"
+            title="Reanudar terapia"
+            @click="openConfirm('resume')"
+          />
+          <!-- active → paused -->
+          <v-list-item
+            v-if="process.processStatus === 'active'"
             prepend-icon="mdi-pause-circle-outline"
+            title="Pausar terapia"
+            @click="openConfirm('pause')"
+          />
+          <!-- active/paused → closed -->
+          <v-list-item
+            v-if="process.processStatus === 'active' || process.processStatus === 'paused'"
+            prepend-icon="mdi-check-all"
+            title="Cerrar terapia"
+            @click="openConfirm('close')"
+          />
+          <!-- disabled → active -->
+          <v-list-item
+            v-if="process.processStatus === 'disabled'"
+            prepend-icon="mdi-play-circle-outline"
+            title="Habilitar terapia"
+            @click="openConfirm('enable')"
+          />
+          <!-- archived → active -->
+          <v-list-item
+            v-if="process.processStatus === 'archived'"
+            prepend-icon="mdi-package-up"
+            title="Desarchivar terapia"
+            @click="openConfirm('unarchive')"
+          />
+          <v-divider v-if="process.processStatus !== 'disabled' && process.processStatus !== 'archived'" />
+          <!-- disable (from active/draft/paused) -->
+          <v-list-item
+            v-if="process.processStatus !== 'disabled' && process.processStatus !== 'archived' && process.processStatus !== 'closed'"
+            prepend-icon="mdi-cancel"
             title="Deshabilitar terapia"
             @click="openConfirm('disable')"
           />
+          <!-- archive (from any except archived) -->
           <v-list-item
             v-if="process.processStatus !== 'archived'"
             prepend-icon="mdi-archive-outline"
@@ -406,14 +445,15 @@ function apptStatusColor(s: AppointmentStatus) { return APPT_STATUS_COLORS[s] ??
 function apptStatusLabel(s: AppointmentStatus) { return APPT_STATUS_LABELS[s] ?? s }
 
 // ── Session split ──────────────────────────────────────────────────────────────
+const now = new Date().toISOString()
 const upcomingSessions = computed(() =>
   sessions.value
-    .filter(s => s.appointmentStatus === 'scheduled' || s.appointmentStatus === 'confirmed')
+    .filter(s => s.startAt >= now && (s.appointmentStatus === 'scheduled' || s.appointmentStatus === 'confirmed'))
     .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
 )
 const pastSessions = computed(() =>
   sessions.value
-    .filter(s => s.appointmentStatus === 'completed' || s.appointmentStatus === 'cancelled' || s.appointmentStatus === 'no_show')
+    .filter(s => s.startAt < now || s.appointmentStatus === 'completed' || s.appointmentStatus === 'cancelled' || s.appointmentStatus === 'no_show')
     .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())
 )
 
@@ -440,11 +480,29 @@ function sessionDuration(startIso: string, endIso: string) {
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────────
+type ConfirmAction = 'activate' | 'resume' | 'pause' | 'close' | 'enable' | 'unarchive' | 'disable' | 'archive' | 'delete'
+
 const confirmDialog = ref(false)
-const confirmAction = ref<'disable' | 'archive' | 'delete' | 'enable' | 'unarchive'>('disable')
+const confirmAction = ref<ConfirmAction>('disable')
 const actionLoading = ref(false)
 
-const CONFIRM_META = {
+const CONFIRM_META: Record<ConfirmAction, { title: string; text: string }> = {
+  activate: {
+    title: 'Activar terapia',
+    text: 'La terapia pasará de borrador a activa. ¿Continuar?',
+  },
+  resume: {
+    title: 'Reanudar terapia',
+    text: '¿Quieres reanudar esta terapia pausada?',
+  },
+  pause: {
+    title: 'Pausar terapia',
+    text: 'La terapia quedará temporalmente en pausa. Podrás reanudarla en cualquier momento.',
+  },
+  close: {
+    title: 'Cerrar terapia',
+    text: 'Se marcará la terapia como cerrada. Esto indica que el tratamiento ha finalizado. ¿Continuar?',
+  },
   enable: {
     title: 'Habilitar terapia',
     text: '¿Quieres reactivar esta terapia como activa?',
@@ -470,7 +528,7 @@ const CONFIRM_META = {
 const confirmTitle = computed(() => CONFIRM_META[confirmAction.value].title)
 const confirmText  = computed(() => CONFIRM_META[confirmAction.value].text)
 
-function openConfirm(action: 'disable' | 'archive' | 'delete' | 'enable' | 'unarchive') {
+function openConfirm(action: ConfirmAction) {
   confirmAction.value = action
   confirmDialog.value = true
 }
@@ -478,18 +536,34 @@ function openConfirm(action: 'disable' | 'archive' | 'delete' | 'enable' | 'unar
 async function executeAction() {
   actionLoading.value = true
   try {
-    if (confirmAction.value === 'enable' || confirmAction.value === 'unarchive') {
-      await updateProcess(id, { processStatus: 'active' })
-      router.replace('/app/therapist/therapies?tab=active')
-    } else if (confirmAction.value === 'disable') {
-      await disableProcess(id)
-      router.replace('/app/therapist/therapies?tab=inactive')
-    } else if (confirmAction.value === 'archive') {
-      await archiveProcess(id)
-      router.replace('/app/therapist/therapies?tab=archived')
-    } else {
-      await deleteProcess(id)
-      router.replace('/app/therapist/therapies')
+    switch (confirmAction.value) {
+      case 'activate':
+      case 'resume':
+      case 'enable':
+      case 'unarchive':
+        await updateProcess(id, { processStatus: 'active' })
+        router.replace('/app/therapist/therapies?tab=active')
+        break
+      case 'pause':
+        await updateProcess(id, { processStatus: 'paused' })
+        router.replace('/app/therapist/therapies?tab=inactive')
+        break
+      case 'close':
+        await updateProcess(id, { processStatus: 'closed' })
+        router.replace('/app/therapist/therapies?tab=archived')
+        break
+      case 'disable':
+        await disableProcess(id)
+        router.replace('/app/therapist/therapies?tab=inactive')
+        break
+      case 'archive':
+        await archiveProcess(id)
+        router.replace('/app/therapist/therapies?tab=archived')
+        break
+      case 'delete':
+        await deleteProcess(id)
+        router.replace('/app/therapist/therapies')
+        break
     }
   } catch (e) {
     console.error('[therapies/[id]] action error', e)
