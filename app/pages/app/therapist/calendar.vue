@@ -1,32 +1,70 @@
 <template>
   <div class="cal-page">
+    <div class="cal-split">
 
-    <!-- Page header -->
-    <div class="cal-page__header">
-      <div>
-        <div class="cal-page__title-wrap">
-          <v-icon icon="mdi-calendar-month-outline" color="primary" size="22" class="mr-2" />
-          <h2 class="cal-page__title">Agenda</h2>
+      <!-- ── Day panel (left) ─────────────────────────────────── -->
+      <aside class="cal-panel">
+        <div class="cal-panel__header">
+          <v-btn icon="mdi-chevron-left" variant="text" density="compact" size="small" @click="shiftDay(-1)" />
+          <div class="cal-panel__date-info">
+            <span class="cal-panel__date-label">{{ formattedDay }}</span>
+            <button v-if="!isTodaySelected" class="cal-panel__today-btn" @click="goToToday">Ir a hoy</button>
+          </div>
+          <v-btn icon="mdi-chevron-right" variant="text" density="compact" size="small" @click="shiftDay(1)" />
         </div>
-        <p class="cal-page__subtitle">Gestiona tus citas y sesiones</p>
-      </div>
-      <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" rounded="lg" @click="onNewAppointment">
-        Nueva cita
-      </v-btn>
-    </div>
 
-    <!-- Calendar -->
-    <div class="cal-page__body">
-      <TherapistCalendar
-        :events="events"
-        :editable="true"
-        initial-view="timeGridWeek"
-        @eventClick="onEventClick"
-        @dateClick="onDateClick"
-        @eventDrop="onEventDrop"
-        @eventResize="onEventResize"
-        @patientNavigate="onPatientNavigate"
-      />
+        <div class="cal-panel__sessions">
+          <div v-if="daySessions.length === 0" class="cal-panel__empty">
+            <v-icon icon="mdi-calendar-blank-outline" size="36" color="disabled" />
+            <p>Sin sesiones</p>
+          </div>
+          <div v-else class="cal-panel__list">
+            <div
+              v-for="s in daySessions"
+              :key="s.id"
+              class="cal-panel__session"
+              role="button"
+              tabindex="0"
+              @click="openFromPanel(s)"
+              @keyup.enter="openFromPanel(s)"
+            >
+              <div class="cal-panel__session-dot" :class="`cal-panel__session-dot--${s.extendedProps.status}`" />
+              <div class="cal-panel__session-info">
+                <span class="cal-panel__session-time">{{ sessionTimeRange(s.start, s.end) }}</span>
+                <span class="cal-panel__session-name">{{ s.title }}</span>
+                <div class="cal-panel__session-footer">
+                  <span class="cal-panel__session-type">{{ APPT_TYPE_LABELS[s.extendedProps.appointmentType] ?? s.extendedProps.appointmentType }}</span>
+                  <span
+                    class="cal-panel__session-status"
+                    :class="`cal-panel__session-status--${s.extendedProps.status}`"
+                  >{{ STATUS_LABELS[s.extendedProps.status] ?? s.extendedProps.status }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-panel__footer">
+          <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" size="small" block @click="onNewAppointmentForDay">
+            Nueva cita
+          </v-btn>
+        </div>
+      </aside>
+
+      <!-- ── Calendar (right) ─────────────────────────────────── -->
+      <div class="cal-main">
+        <TherapistCalendar
+          :events="events"
+          :editable="true"
+          initial-view="timeGridWeek"
+          @eventClick="onEventClick"
+          @dateClick="onDateClick"
+          @eventDrop="onEventDrop"
+          @eventResize="onEventResize"
+          @patientNavigate="onPatientNavigate"
+        />
+      </div>
+
     </div>
 
     <!-- Modal crear / editar cita -->
@@ -211,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import TherapistCalendar from '~/components/calendar/TherapistCalendar.vue'
 import {
@@ -225,13 +263,92 @@ import {
 } from '~/services/appointmentService'
 import { getPatients } from '~/services/patientService'
 import { getPatientProcesses } from '~/services/processService'
-import { useThemeStore } from '~/stores/theme'
+import { CAL_EVENT_SCHEDULED, CAL_EVENT_COMPLETED, CAL_EVENT_CANCELLED } from '~/stores/theme'
 
 definePageMeta({ middleware: ['auth', 'role'], role: 'THERAPIST' })
 
-const themeStore = useThemeStore()
-
 const router = useRouter()
+
+// ── Day panel ─────────────────────────────────────────────────────────────────
+function todayISO(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const selectedDay = ref(todayISO())
+
+function shiftDay(delta: number) {
+  const d = new Date(selectedDay.value + 'T12:00:00')
+  d.setDate(d.getDate() + delta)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  selectedDay.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function goToToday() {
+  selectedDay.value = todayISO()
+}
+
+const isTodaySelected = computed(() => selectedDay.value === todayISO())
+
+const formattedDay = computed(() => {
+  const d = new Date(selectedDay.value + 'T12:00:00')
+  const today = todayISO()
+  const tomorrow = (() => {
+    const t = new Date()
+    t.setDate(t.getDate() + 1)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`
+  })()
+  if (selectedDay.value === today) return 'Hoy'
+  if (selectedDay.value === tomorrow) return 'Mañana'
+  return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+})
+
+const daySessions = computed(() =>
+  events.value
+    .filter(e => (e.start ?? '').slice(0, 10) === selectedDay.value)
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()),
+)
+
+const APPT_TYPE_LABELS: Record<string, string> = {
+  in_person:  'Presencial',
+  online:     'Online',
+  phone:      'Teléfono',
+  home_visit: 'Visita domiciliaria',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  scheduled: 'Programada',
+  confirmed: 'Confirmada',
+  completed: 'Completada',
+  cancelled: 'Cancelada',
+  no_show:   'No asistió',
+}
+
+function sessionTimeRange(start: string, end: string): string {
+  const fmt = (d: string) => new Date(d).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })
+  return `${fmt(start)} – ${fmt(end)}`
+}
+
+function openFromPanel(session: any) {
+  onEventClick({
+    event: {
+      id: session.id,
+      extendedProps: session.extendedProps,
+      startStr: session.start,
+      endStr: session.end,
+    },
+  })
+}
+
+function onNewAppointmentForDay() {
+  const start = `${selectedDay.value}T09:00`
+  form.value = { ...emptyForm(), start, end: addOneHour(start) }
+  modalTitle.value = 'Nueva cita'
+  formError.value = ''
+  showModal.value = true
+}
 
 const events = ref<any[]>([])
 const patients = ref<any[]>([])
@@ -325,9 +442,9 @@ async function loadEvents() {
       cancelReason: a.cancelReason,
       processId: a.therapyProcessId ?? a.processId ?? null,
     },
-    color: a.appointmentStatus === 'cancelled' ? themeStore.currentPalette.calEventCancelled
-         : a.appointmentStatus === 'completed'  ? themeStore.currentPalette.calEventCompleted
-         : themeStore.currentPalette.calEventScheduled,
+    color: a.appointmentStatus === 'cancelled' ? CAL_EVENT_CANCELLED
+         : a.appointmentStatus === 'completed'  ? CAL_EVENT_COMPLETED
+         : CAL_EVENT_SCHEDULED,
   }))
 }
 
@@ -339,8 +456,6 @@ onMounted(async () => {
     fullName: p.fullName ?? (p.firstName ? `${p.firstName} ${p.lastName}` : p.id),
   }))
 })
-
-watch(() => themeStore.paletteId, () => { loadEvents() })
 
 async function onEventClick(info: any) {
   const e = info.event
@@ -373,19 +488,11 @@ async function onEventClick(info: any) {
 }
 
 function onDateClick(info: any) {
+  // Sync day panel to the clicked date
+  selectedDay.value = info.dateStr.slice(0, 10)
   const start = toDatetimeLocal(info.dateStr.length === 10 ? info.dateStr + 'T09:00' : info.dateStr)
   const end   = addOneHour(start)
   form.value = { ...emptyForm(), start, end }
-  modalTitle.value = 'Nueva cita'
-  formError.value = ''
-  showModal.value = true
-}
-
-function onNewAppointment() {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const start = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T09:00`
-  form.value = { ...emptyForm(), start, end: addOneHour(start) }
   modalTitle.value = 'Nueva cita'
   formError.value = ''
   showModal.value = true
@@ -406,8 +513,8 @@ async function onPatientNavigate(apptId: string) {
 async function onEventDrop(info: any) {
   try {
     await updateAppointment(info.event.id, {
-      startAt: info.event.startStr,
-      endAt: info.event.endStr,
+      startAt: new Date(info.event.startStr).toISOString(),
+      endAt: new Date(info.event.endStr).toISOString(),
     })
   } catch {
     info.revert()
@@ -417,8 +524,8 @@ async function onEventDrop(info: any) {
 async function onEventResize(info: any) {
   try {
     await updateAppointment(info.event.id, {
-      startAt: info.event.startStr,
-      endAt: info.event.endStr,
+      startAt: new Date(info.event.startStr).toISOString(),
+      endAt: new Date(info.event.endStr).toISOString(),
     })
   } catch {
     info.revert()
@@ -521,47 +628,234 @@ async function confirmDelete() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: $space-5 $space-6;
+  padding: $space-5 $space-5;
   background: $color-background;
+}
+
+.cal-split {
+  display: flex;
+  gap: $space-4;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── Day panel ─────────────────────────────────────────────────────────────────
+.cal-panel {
+  width: 272px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
 
   &__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: $space-5;
-  }
-
-  &__title-wrap {
-    display: flex;
     align-items: center;
-    margin-bottom: $space-1;
+    justify-content: space-between;
+    padding: $space-2 $space-3;
+    border-bottom: 1px solid $color-border;
+    gap: $space-1;
   }
 
-  &__title {
-    font-size: $font-size-xl;
+  &__date-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  &__date-label {
+    font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $color-text-main;
+    text-align: center;
+    text-transform: capitalize;
+    line-height: 1.3;
+  }
+
+  &__today-btn {
+    font-size: $font-size-xs;
+    color: $color-primary;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-weight: $font-weight-medium;
+    text-decoration: underline;
     line-height: 1;
+
+    &:hover { opacity: 0.75; }
   }
 
-  &__subtitle {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
-    padding-left: 34px;
-  }
-
-  &__body {
+  &__sessions {
     flex: 1;
-    min-height: 0;
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: $radius-lg;
-    padding: $space-4;
+    overflow-y: auto;
+    padding: $space-2;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $space-7 $space-4;
+    color: $color-text-muted;
+
+    p {
+      font-size: $font-size-sm;
+      margin-top: $space-2;
+      color: $color-text-muted;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
+  &__session {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover { background: $color-hover; }
+    &:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
+  }
+
+  &__session-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    background: $color-border;
+
+    &--scheduled { background: rgb(var(--v-theme-primary)); }
+    &--confirmed  { background: #3b82f6; }
+    &--completed  { background: #2E8B57; }
+    &--cancelled  { background: $color-text-muted; }
+    &--no_show    { background: $color-warning; }
+  }
+
+  &__session-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  &__session-time {
+    font-size: 0.7rem;
+    color: $color-text-muted;
+    font-weight: $font-weight-medium;
+  }
+
+  &__session-name {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    white-space: nowrap;
     overflow: hidden;
-    box-shadow: $shadow-sm;
+    text-overflow: ellipsis;
+  }
+
+  &__session-footer {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    flex-wrap: wrap;
+  }
+
+  &__session-type {
+    font-size: 0.65rem;
+    color: $color-text-muted;
+  }
+
+  &__session-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: $font-weight-semibold;
+    padding: 1px 6px;
+    border-radius: $radius-full;
+    line-height: 1.5;
+
+    &--scheduled { background: rgba(91, 42, 134, 0.1); color: $color-primary; }
+    &--confirmed  { background: #dbeafe; color: #1d4ed8; }
+    &--completed  { background: #dcfce7; color: #166534; }
+    &--cancelled  { background: $color-disabled-bg; color: $color-text-muted; }
+    &--no_show    { background: $color-warning-subtle; color: $color-warning; }
+  }
+
+  &__footer {
+    padding: $space-3;
+    border-top: 1px solid $color-border;
   }
 }
+
+// ── Calendar main area ────────────────────────────────────────────────────────
+.cal-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+// Responsive: stack on smaller screens
+@media (max-width: 1100px) {
+  .cal-split {
+    flex-direction: column;
+  }
+
+  .cal-panel {
+    width: 100%;
+    max-height: 280px;
+
+    &__sessions {
+      display: flex;
+      align-items: flex-start;
+      gap: $space-2;
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: $space-2;
+    }
+
+    &__list {
+      flex-direction: row;
+      gap: $space-2;
+    }
+
+    &__session {
+      min-width: 160px;
+      flex-shrink: 0;
+    }
+
+    &__empty {
+      padding: $space-4;
+      flex-direction: row;
+      p { margin-top: 0; margin-left: $space-2; }
+    }
+  }
+}
+
 
 // ── Dialog ────────────────────────────────────────────────────────────────────
 .cal-dialog {

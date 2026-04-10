@@ -139,9 +139,9 @@ function renderEventContent(arg: any) {
       ])
     : null
 
-  // Cancelled badge
-  const cancelledBadge = cancelled
-    ? h('span', { class: 'fc-event-inner__cancelled' }, 'Cancelada')
+  // Status badge — shown for all statuses
+  const statusBadge = status
+    ? h('span', { class: `fc-event-inner__status fc-event-inner__status--${status}` }, STATUS_LABELS[status] ?? status)
     : null
 
   return h('div', { class: ['fc-event-inner', cancelled ? 'fc-event-inner--cancelled' : ''] }, [
@@ -152,8 +152,10 @@ function renderEventContent(arg: any) {
     ]),
     // Row 2: patient name
     h('span', { class: 'fc-event-inner__title' }, title),
-    // Row 3: type badge or cancelled badge
-    cancelledBadge ?? (typeBadge ? h('div', { class: 'fc-event-inner__meta' }, [typeBadge]) : null),
+    // Row 3: type badge
+    typeBadge ? h('div', { class: 'fc-event-inner__meta' }, [typeBadge]) : null,
+    // Row 4: status badge (bottom)
+    statusBadge ? h('div', { class: 'fc-event-inner__status-row' }, [statusBadge]) : null,
   ])
 }
 
@@ -274,6 +276,26 @@ watch(() => props.events, (newEvents) => {
   text-transform: uppercase;
 }
 
+.fc-event-inner__status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 3px;
+  padding: 1px 5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.22);
+  margin-left: 3px;
+}
+
+.fc-event-inner__status--scheduled  { background: rgba(255, 255, 255, 0.20); }
+.fc-event-inner__status--confirmed  { background: rgba(59,  130, 246, 0.30); }
+.fc-event-inner__status--completed  { background: rgba(46,  139, 87,  0.30); }
+.fc-event-inner__status--cancelled  { background: rgba(255, 255, 255, 0.18); opacity: 0.85; }
+.fc-event-inner__status--no_show    { background: rgba(199, 123, 44,  0.35); }
+
 .fc-event-inner {
   display: flex;
   flex-direction: column;
@@ -293,11 +315,12 @@ watch(() => props.events, (newEvents) => {
 }
 
 .fc-event-inner__time {
-  font-size: 0.67rem;
+  font-size: 0.6rem;
   opacity: 0.82;
   font-weight: 500;
   line-height: 1.3;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .fc-event-inner__link {
@@ -339,6 +362,14 @@ watch(() => props.events, (newEvents) => {
   display: flex;
   align-items: center;
   margin-top: 1px;
+}
+
+/* ── Row 4: status badge ── */
+.fc-event-inner__status-row {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 2px;
 }
 
 .fc-event-inner__type {

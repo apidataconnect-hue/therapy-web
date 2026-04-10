@@ -334,3 +334,45 @@ h1, h2, h3, h4, h5, h6 {
 
 .font-semibold { font-weight: $font-weight-semibold !important; }
 .font-medium   { font-weight: $font-weight-medium !important; }
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+
+.app-tabs {
+  border-bottom: 2px solid $color-border;
+
+  :deep(.v-tab) {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: $font-size-sm !important;
+    font-weight: $font-weight-medium !important;
+    color: $color-text-muted !important;
+    min-width: 0;
+    padding: 0 $space-4;
+
+    &.v-tab--selected {
+      color: $color-primary !important;
+      font-weight: $font-weight-semibold !important;
+    }
+  }
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: $radius-full;
+  font-size: 0.65rem;
+  font-weight: $font-weight-semibold;
+  background: $color-border;
+  color: $color-text-muted;
+  margin-left: 6px;
+  line-height: 1;
+
+  &--active {
+    background: rgba(91, 42, 134, 0.12);
+    color: $color-primary;
+  }
+}

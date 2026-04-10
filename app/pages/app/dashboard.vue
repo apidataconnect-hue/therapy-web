@@ -52,7 +52,7 @@
           </div>
           <div v-else-if="tagChartSeries.length === 0" class="db-card__center">
             <v-icon icon="mdi-tag-off-outline" size="40" color="disabled" />
-            <p class="mt-2 text-medium-emphasis" style="font-size:0.8rem">Sin etiquetas asignadas todavía</p>
+            <p class="mt-2 text-medium-emphasis" style="font-size:0.8rem">Sin procesos registrados todavía</p>
           </div>
           <template v-else>
             <client-only>
@@ -179,14 +179,22 @@ const liveTagIds = computed(() => new Set(tagStore.tags.map(t => t.id)))
 
 const tagStats = computed(() => {
   const m = new Map<string, { name: string; color: string; count: number }>()
+  let untaggedCount = 0
   for (const p of processes.value) {
-    for (const t of (p.tags ?? [])) {
-      if (!liveTagIds.value.has(t.id)) continue  // tag was deleted — skip
-      if (!m.has(t.id)) m.set(t.id, { name: t.name, color: t.color ?? '#9E9E9E', count: 0 })
-      m.get(t.id)!.count++
+    if (p.processStatus === 'draft') continue
+    const validTags = (p.tags ?? []).filter((t: any) => liveTagIds.value.has(t.id))
+    if (validTags.length === 0) {
+      untaggedCount++
+    } else {
+      for (const t of validTags) {
+        if (!m.has(t.id)) m.set(t.id, { name: t.name, color: t.color ?? '#9E9E9E', count: 0 })
+        m.get(t.id)!.count++
+      }
     }
   }
-  return Array.from(m.values()).sort((a, b) => b.count - a.count)
+  const result = Array.from(m.values()).sort((a, b) => b.count - a.count)
+  if (untaggedCount > 0) result.push({ name: 'Otros', color: '#C8C0D8', count: untaggedCount })
+  return result
 })
 
 const tagChartSeries = computed(() => tagStats.value.map(t => t.count))

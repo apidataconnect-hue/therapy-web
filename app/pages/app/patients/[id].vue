@@ -275,8 +275,9 @@
           />
         </div>
         <v-text-field
+          v-if="editForm.isMinor"
           v-model="editForm.emergencyContactRelation"
-          label="Relación"
+          label="Relación (tutor / responsable)"
           variant="outlined"
           density="compact"
           hide-details="auto"

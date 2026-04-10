@@ -33,24 +33,18 @@
         hide-details
         class="ss-search"
       />
-      <v-tabs v-model="tab" color="primary" density="compact" class="ss-tabs">
+      <v-tabs v-model="tab" color="primary" density="compact" class="app-tabs">
         <v-tab value="upcoming">
           Próximas
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'upcoming' ? 'primary' : undefined">
-            {{ counts.upcoming }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'upcoming' }">{{ counts.upcoming }}</span>
         </v-tab>
         <v-tab value="completed">
           Pasadas
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'completed' ? 'primary' : undefined">
-            {{ counts.completed }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'completed' }">{{ counts.completed }}</span>
         </v-tab>
         <v-tab value="cancelled">
           Canceladas
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'cancelled' ? 'primary' : undefined">
-            {{ counts.cancelled }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'cancelled' }">{{ counts.cancelled }}</span>
         </v-tab>
       </v-tabs>
     </div>
@@ -283,7 +277,6 @@ async function loadSessions() {
 }
 
 .ss-search { max-width: 360px; }
-.ss-tabs   { border-bottom: 1px solid $color-border; }
 
 // ── List ─────────────────────────────────────────────────────────────────────
 .ss-list {

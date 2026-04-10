@@ -96,27 +96,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 import { logout as apiLogout } from '~/services/authService'
 import { useNotificationStore } from '~/stores/notification'
-import { useThemeStore, applyPaletteToTheme } from '~/stores/theme'
 import NotificationBar from '~/components/notifications/NotificationBar.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 const role = computed(() => auth.userRole)
-const vuetifyTheme = useTheme()
-const themeStore = useThemeStore()
-
-onMounted(() => {
-  applyPaletteToTheme(themeStore.currentPalette, vuetifyTheme)
-})
-watch(
-  () => themeStore.paletteId,
-  () => applyPaletteToTheme(themeStore.currentPalette, vuetifyTheme),
-)
 const notificationStore = useNotificationStore()
 const notification = computed(() => notificationStore.notification)
 const showNotification = computed(() => notificationStore.show)
@@ -124,11 +112,10 @@ const drawer = ref(true)
 const rail = ref(false)
 
 const therapistNav = [
-  { to: '/app/dashboard',                 icon: 'mdi-view-dashboard-outline',  label: 'Panel' },
-  { to: '/app/patients',                  icon: 'mdi-account-group-outline',    label: 'Pacientes' },
-  { to: '/app/therapist/sessions',        icon: 'mdi-calendar-check-outline',  label: 'Sesiones' },
-  { to: '/app/therapist/therapies',       icon: 'mdi-clipboard-pulse-outline', label: 'Terapias' },
   { to: '/app/therapist/calendar',        icon: 'mdi-calendar-month-outline',  label: 'Agenda' },
+  { to: '/app/patients',                  icon: 'mdi-account-group-outline',    label: 'Pacientes' },
+  { to: '/app/therapist/therapies',       icon: 'mdi-clipboard-pulse-outline', label: 'Terapias' },
+  { to: '/app/dashboard',                 icon: 'mdi-view-dashboard-outline',  label: 'Panel' },
   { to: '/app/therapist/ai-templates',    icon: 'mdi-creation-outline',        label: 'Plantillas IA' },
 ]
 

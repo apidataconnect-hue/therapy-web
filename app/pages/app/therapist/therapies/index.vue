@@ -62,24 +62,22 @@
     </div>
 
     <!-- Tabs -->
-    <v-tabs v-model="tab" class="tq-tabs mb-4" color="primary" density="compact">
+    <v-tabs v-model="tab" class="app-tabs mb-4" color="primary" density="compact">
       <v-tab value="active">
         Activos
-        <v-chip v-if="!loading" size="x-small" class="ml-2" :color="tab === 'active' ? 'primary' : undefined" variant="tonal">
-          {{ counts.active }}
-        </v-chip>
+        <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'active' }">{{ counts.active }}</span>
       </v-tab>
-      <v-tab value="inactive">
-        Inactivos
-        <v-chip v-if="!loading" size="x-small" class="ml-2" :color="tab === 'inactive' ? 'primary' : undefined" variant="tonal">
-          {{ counts.inactive }}
-        </v-chip>
+      <v-tab value="draft">
+        Borrador
+        <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'draft' }">{{ counts.draft }}</span>
+      </v-tab>
+      <v-tab value="paused">
+        Pausados
+        <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'paused' }">{{ counts.paused }}</span>
       </v-tab>
       <v-tab value="archived">
         Archivados
-        <v-chip v-if="!loading" size="x-small" class="ml-2" :color="tab === 'archived' ? 'primary' : undefined" variant="tonal">
-          {{ counts.archived }}
-        </v-chip>
+        <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'archived' }">{{ counts.archived }}</span>
       </v-tab>
     </v-tabs>
 
@@ -217,21 +215,22 @@ function toggleTagFilter(id: string) {
   else selectedTagIds.value.splice(idx, 1)
 }
 
-const tab = ref<'active' | 'inactive' | 'archived'>(
-
-  (['active', 'inactive', 'archived'].includes(route.query.tab as string)
-    ? route.query.tab as 'active' | 'inactive' | 'archived'
+const tab = ref<'active' | 'draft' | 'paused' | 'archived'>(
+  (['active', 'draft', 'paused', 'archived'].includes(route.query.tab as string)
+    ? route.query.tab as 'active' | 'draft' | 'paused' | 'archived'
     : 'active')
 )
 const loading = ref(true)
 
 const activeList   = ref<TherapyProcess[]>([])
-const inactiveList = ref<TherapyProcess[]>([])
+const draftList    = ref<TherapyProcess[]>([])
+const pausedList   = ref<TherapyProcess[]>([])
 const archivedList = ref<TherapyProcess[]>([])
 
 const currentList = computed(() => {
   if (tab.value === 'active')   return activeList.value
-  if (tab.value === 'inactive') return inactiveList.value
+  if (tab.value === 'draft')    return draftList.value
+  if (tab.value === 'paused')   return pausedList.value
   return archivedList.value
 })
 
@@ -250,7 +249,8 @@ const filteredList = computed(() => {
 
 const counts = computed(() => ({
   active:   activeList.value.length,
-  inactive: inactiveList.value.length,
+  draft:    draftList.value.length,
+  paused:   pausedList.value.length,
   archived: archivedList.value.length,
 }))
 
@@ -289,13 +289,15 @@ async function submitCreate() {
 // ── Data loading ─────────────────────────────────────────────────────────────
 async function loadAll() {
   try {
-    const [a, i, ar] = await Promise.all([
+    const [a, d, p, ar] = await Promise.all([
       getProcesses({ processStatus: ['active'], sortBy: 'nextAppointmentAt', order: 'asc', size: 100 }),
-      getProcesses({ processStatus: ['paused', 'draft', 'disabled'], sortBy: 'openedAt', order: 'desc', size: 100 }),
+      getProcesses({ processStatus: ['draft'], sortBy: 'openedAt', order: 'desc', size: 100 }),
+      getProcesses({ processStatus: ['paused', 'disabled'], sortBy: 'openedAt', order: 'desc', size: 100 }),
       getProcesses({ processStatus: ['closed', 'archived'], sortBy: 'closedAt', order: 'desc', size: 100 }),
     ])
     activeList.value   = a.items ?? []
-    inactiveList.value = i.items ?? []
+    draftList.value    = d.items ?? []
+    pausedList.value   = p.items ?? []
     archivedList.value = ar.items ?? []
   }
   catch (e) {
@@ -372,9 +374,7 @@ onMounted(async () => {
   }
 }
 
-.tq-tabs {
-  border-bottom: 1px solid $color-border;
-}
+
 
 // ── Toolbar (search + tag filter) ─────────────────────────────────────────────
 .tq-toolbar {

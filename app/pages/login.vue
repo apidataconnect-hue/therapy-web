@@ -118,7 +118,7 @@ async function onLogin() {
         await navigateTo('/patient')
       }
     } else {
-      await navigateTo('/app/dashboard')
+      await navigateTo('/app/therapist/calendar')
     }
   } catch {
     errorMessage.value = 'Credenciales incorrectas. Verifica tu correo y contraseña.'
