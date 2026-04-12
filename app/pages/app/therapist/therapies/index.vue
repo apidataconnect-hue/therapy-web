@@ -530,4 +530,37 @@ onMounted(async () => {
     color: $color-text-muted;
   }
 }
+
+// ── Tab activo ────────────────────────────────────────────────────────────────
+:deep(.app-tabs) {
+  .v-tab {
+    border-radius: $radius-md $radius-md 0 0;
+    transition: background 0.15s, color 0.15s;
+
+    &.v-tab--selected {
+      background: $color-primary-muted !important;
+    }
+  }
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: $space-2;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  background: rgba($color-text-muted, 0.12);
+  color: $color-text-muted;
+  transition: background 0.2s, color 0.2s;
+
+  &--active {
+    background: $color-primary;
+    color: #fff;
+  }
+}
 </style>

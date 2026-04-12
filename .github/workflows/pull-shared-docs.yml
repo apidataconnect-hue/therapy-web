@@ -1,0 +1,55 @@
+name: Pull shared API docs into web repo
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - master
+    paths:
+      - '.github/workflows/pull-shared-docs.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  pull-docs:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout web repository
+        uses: actions/checkout@v6
+
+      - name: Clone therapy-docs repository
+        env:
+          DOCS_SYNC_TOKEN: ${{ secrets.DOCS_SYNC_TOKEN }}
+        run: |
+          if [ -z "$DOCS_SYNC_TOKEN" ]; then
+            echo "DOCS_SYNC_TOKEN is empty or not configured"
+            exit 1
+          fi
+
+          git clone https://x-access-token:${DOCS_SYNC_TOKEN}@github.com/apidataconnect-hue/therapy-docs.git external-docs
+
+      - name: Sync API docs into web repo
+        run: |
+          mkdir -p .github/docs/external/api
+          rsync -av --delete external-docs/api/ .github/docs/external/api/
+
+      - name: Commit and push changes if needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .github/docs/external/api
+            git commit -m "Sync shared API docs into web repo"
+            git push
+          else
+            echo "No changes to commit"
+          fi

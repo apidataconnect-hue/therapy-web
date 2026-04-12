@@ -79,18 +79,7 @@
         <v-divider />
         <v-card-text class="pa-5">
           <v-form ref="formRef" @submit.prevent="onSave">
-            <v-select
-              v-model="form.appointmentType"
-              :items="appointmentTypes"
-              item-title="label"
-              item-value="value"
-              label="Tipo de cita"
-              prepend-inner-icon="mdi-tag-outline"
-              required
-              class="mb-3"
-            />
             <v-autocomplete
-              v-if="!form.id"
               v-model="form.patientId"
               :items="patients"
               item-title="fullName"
@@ -104,7 +93,6 @@
               <v-text-field v-model="form.start" label="Inicio" type="datetime-local" prepend-inner-icon="mdi-clock-start" required />
               <v-text-field v-model="form.end" label="Fin" type="datetime-local" prepend-inner-icon="mdi-clock-end" required />
             </div>
-            <v-text-field v-model="form.locationText" label="Lugar (opcional)" prepend-inner-icon="mdi-map-marker-outline" class="mb-3" />
             <v-autocomplete
               v-model="form.processId"
               :items="processes"
@@ -115,7 +103,19 @@
               clearable
               class="mb-3"
               no-data-text="Sin procesos disponibles para este paciente"
+              :disabled="!form.patientId"
             />
+            <v-select
+              v-model="form.appointmentType"
+              :items="appointmentTypes"
+              item-title="label"
+              item-value="value"
+              label="Tipo de cita"
+              prepend-inner-icon="mdi-tag-outline"
+              required
+              class="mb-3"
+            />
+            <v-text-field v-model="form.locationText" label="Lugar (opcional)" prepend-inner-icon="mdi-map-marker-outline" class="mb-3" />
             <v-textarea v-model="form.notes" label="Notas" prepend-inner-icon="mdi-text" rows="2" auto-grow />
             <v-textarea
               v-if="form.status === 'cancelled'"
@@ -417,7 +417,10 @@ async function loadProcesses(patientId: string | '') {
   processes.value = []
   if (!patientId) return
   try {
-    processes.value = await getPatientProcesses(patientId)
+    // Solo mostrar procesos activos
+    processes.value = (await getPatientProcesses(patientId)).filter(
+      p => p.processStatus === 'active'
+    )
   } catch {
     // non-critical: dropdown stays empty
   }
@@ -484,6 +487,14 @@ async function onEventClick(info: any) {
     form.value.notes = detail.notes ?? ''
     form.value.locationText = detail.locationText ?? ''
     form.value.processId = (detail as any).therapyProcessId ?? (detail as any).processId ?? null
+    form.value.patientId = detail.patientId ?? (detail.patient?.id ?? form.value.patientId)
+    // Si el proceso asignado no está en la lista, lo agregamos para mostrar el texto correcto
+    if (form.value.processId && !processes.value.find(p => p.id === form.value.processId)) {
+      const processDetail = await getProcess(form.value.processId)
+      if (processDetail && processDetail.processStatus === 'active') {
+        processes.value.push(processDetail)
+      }
+    }
   } catch { /* non-critical, modal already open with partial data */ }
 }
 

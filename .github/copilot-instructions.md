@@ -124,6 +124,7 @@ Do not jump directly into coding without understanding the current structure.
 - Do not invent endpoints.
 - Do not hardcode mock responses as if they were real backend behavior.
 - If an API contract is unclear, inspect existing usage patterns first.
+- **The full API documentation (endpoints, request/response shapes, enums, business rules) is located in `.github/docs/api/`.** Always consult those files before assuming an endpoint's shape, available filters, or payload structure. If a doc file does not exist yet for a given resource, fall back to inspecting existing service files and usage patterns.
 
 ### Forms
 - Follow the form structure and validation approach already used in the project.
