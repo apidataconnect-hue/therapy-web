@@ -56,6 +56,7 @@ export interface CreatePatientPayload {
   emergencyContactPhone?: string | null
   emergencyContactRelation?: string | null
   source?: string | null
+  guardians?: CreateGuardianPayload[]
 }
 
 export type UpdatePatientPayload = Partial<CreatePatientPayload> & {

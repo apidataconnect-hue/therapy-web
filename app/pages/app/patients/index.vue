@@ -15,9 +15,9 @@
         variant="flat"
         prepend-icon="mdi-account-plus-outline"
         size="small"
-        :to="'/app/patients/invite'"
+        :to="'/app/patients/create'"
       >
-        Invitar paciente
+        Nuevo paciente
       </v-btn>
     </div>
 
@@ -72,9 +72,9 @@
           prepend-icon="mdi-account-plus-outline"
           size="small"
           class="mt-4"
-          :to="'/app/patients/invite'"
+          :to="'/app/patients/create'"
         >
-          Invitar primer paciente
+          Nuevo paciente
         </v-btn>
       </div>
 

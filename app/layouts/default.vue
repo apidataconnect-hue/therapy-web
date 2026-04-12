@@ -34,8 +34,8 @@
 
       <!-- Navegación por rol -->
       <v-list density="compact" nav class="nav-list">
-        <!-- THERAPIST -->
-        <template v-if="role === 'THERAPIST'">
+        <!-- THERAPIST (show when role is THERAPIST or when API returns no roles) -->
+        <template v-if="role === 'THERAPIST' || !role">
           <div v-if="!rail" class="nav-section-label">Gestión</div>
           <v-list-item
             v-for="item in therapistNav"
@@ -60,7 +60,7 @@
             active-class="nav-item--active"
           />
           <v-list-item
-            v-if="role === 'THERAPIST'"
+            v-if="role === 'THERAPIST' || !role"
             to="/app/therapist/settings"
             prepend-icon="mdi-cog-outline"
             title="Configuración"
