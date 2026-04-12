@@ -425,6 +425,8 @@ AI-generated clinical session plans, linked to an appointment and optionally to 
 | `PATCH`  | `/api/session-plan/{appointmentHash}` | ✅ | Manually update the content of an existing plan. Body: `{ "content": "string" }`. |
 | `DELETE` | `/api/session-plan/{appointmentHash}` | ✅ | Remove the plan (sets `session_note.session_plan_id = null`). |
 
+
+
 ### POST — body
 | Field | Type | Required | Notes |
 |-------|------|:--------:|-------|
