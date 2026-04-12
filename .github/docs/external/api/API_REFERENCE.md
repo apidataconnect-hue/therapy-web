@@ -1,6 +1,12 @@
 # PsychotherapyConnect — API Reference for Web Client
 
-> **Base URL:** `http://localhost:{DEVELOPMENT_WEB_PORT}`
+> **Base URLs:**
+>
+> | Entorno | URL |
+> |---------|-----|
+> | Producción | `https://api.apidataconnect.com` |
+> | Desarrollo (servidor) | `https://dev.apidataconnect.com` |
+> | Local | `http://localhost:{DEVELOPMENT_WEB_PORT}` |
 >
 > **Auth header:** All `api/*` routes require `token: <JWT>` obtained after login.  
 > **Public routes** (`public_*`) require `deviceId` + `deviceType` headers but **no token**.  
