@@ -11,6 +11,7 @@ export interface AuthState {
   user: User | null
   token: string | null
   refreshToken: string | null
+  selectedProfileId: string | null
 }
 
 const LS_KEY = 'tw-auth'
@@ -30,6 +31,7 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     token: null,
     refreshToken: null,
+    selectedProfileId: null,
     ...loadFromStorage(),
   }),
   getters: {
@@ -38,6 +40,8 @@ export const useAuthStore = defineStore('auth', {
     userRoles: (state) => (state.user?.roles ?? []).map(r => r.replace(/^ROLE_/, '')),
     // Returns the primary role (first role without "ROLE_" prefix), e.g. "THERAPIST"
     userRole: (state) => (state.user?.roles ?? []).map(r => r.replace(/^ROLE_/, ''))[0] ?? null,
+    isPatient: (state) => (state.user?.roles ?? []).some(r => r.includes('PATIENT')),
+    isTherapist: (state) => (state.user?.roles ?? []).some(r => r.includes('THERAPIST')),
   },
   actions: {
     setAuth(user: User, token: string, refreshToken?: string) {
@@ -51,10 +55,15 @@ export const useAuthStore = defineStore('auth', {
       if (refreshToken !== undefined) this.refreshToken = refreshToken
       saveToStorage(this.$state)
     },
+    setProfileId(id: string | null) {
+      this.selectedProfileId = id
+      saveToStorage(this.$state)
+    },
     clearAuth() {
       this.user = null
       this.token = null
       this.refreshToken = null
+      this.selectedProfileId = null
       if (typeof localStorage !== 'undefined') localStorage.removeItem(LS_KEY)
     },
   },

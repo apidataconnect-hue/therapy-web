@@ -4,6 +4,7 @@
 $color-primary:          #5B2A86;  // Morado — acción principal
 $color-primary-light:    #7B4DAE;
 $color-primary-subtle:   #F2EBF9;
+$color-primary-muted:    #E0CCF5;  // Morado intermedio — tabs activos, hovers
 $color-secondary:        #9AC6C5;  // Teal — acción secundaria
 $color-secondary-subtle: #E4F5F4;
 
@@ -45,6 +46,10 @@ $font-size-lg:        1.0625rem;
 $font-size-xl:        1.25rem;
 $font-size-2xl:       1.5rem;
 $font-size-3xl:       2rem;
+$font-size-h2:        $font-size-2xl;   // 1.5rem   — títulos de página
+$font-size-h3:        $font-size-xl;    // 1.25rem  — valores KPI
+$font-size-h5:        $font-size-base;  // 0.9375rem — subtítulos
+$font-size-caption:   $font-size-sm;   // 0.8125rem — etiquetas / meta
 $font-weight-regular: 400;
 $font-weight-medium:  500;
 $font-weight-semibold:600;
@@ -82,11 +87,11 @@ $transition-normal: 220ms ease;
 
 // ─── NAVEGACIÓN ──────────────────────────────────────────────────────────────
 $nav-width:          240px;
-$nav-bg:             #360568;
-$nav-text:           #C8D0DC;
-$nav-text-active:    #FFFFFF;
-$nav-item-active-bg: #2D3D55;
-$nav-item-hover-bg:  #243047;
+$nav-bg:             $color-surface;
+$nav-text:           $color-text-secondary;
+$nav-text-active:    $color-primary;
+$nav-item-active-bg: $color-primary-subtle;
+$nav-item-hover-bg:  $color-hover;
 $topbar-height:      64px;
 
 // ─── ALIASES ADICIONALES ─────────────────────────────────────────────────────

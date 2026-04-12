@@ -31,7 +31,7 @@ export async function getInvitationByToken(token: string): Promise<any> {
   return data
 }
 
-export async function acceptInvitation(token: string, payload: { password: string }): Promise<any> {
+export async function acceptInvitation(token: string, payload: { password?: string }): Promise<any> {
   const { data } = await api.post(`/public/invitations/${token}/accept`, payload)
   return data
 }

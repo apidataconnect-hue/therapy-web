@@ -11,6 +11,8 @@ export interface SessionNote {
   homework?: string | null
   nextSteps?: string | null
   privateNotes?: string | null
+  plan?: string | null
+  planId?: string | null
   createdAt?: string | null
   updatedAt?: string | null
 }
@@ -24,6 +26,7 @@ export interface CreateSessionNotePayload {
   homework?: string | null
   nextSteps?: string | null
   privateNotes?: string | null
+  plan?: string | null
 }
 
 export type UpdateSessionNotePayload = Partial<Omit<CreateSessionNotePayload, 'processId'>>

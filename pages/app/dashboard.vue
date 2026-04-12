@@ -288,7 +288,7 @@ const quickLinks = [
   { to: '/app/therapist/therapies', title: 'Terapias',   desc: 'Gestiona los procesos',  icon: 'mdi-clipboard-pulse-outline', color: '#5B2A86', bg: '#F2EBF9' },
   { to: '/app/patients',            title: 'Pacientes',  desc: 'Consulta tus pacientes', icon: 'mdi-account-group-outline',   color: '#1A7A8A', bg: '#e4f5f7' },
   { to: '/app/therapist/sessions',  title: 'Sesiones',   desc: 'Historial de citas',     icon: 'mdi-calendar-check-outline',  color: '#2E8B57', bg: '#edf7f1' },
-  { to: '/app/therapist/calendar',  title: 'Calendario', desc: 'Planifica nuevas citas', icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
+  { to: '/app/therapist/calendar',  title: 'Agenda', desc: 'Planifica nuevas citas', icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
 ]
 </script>
 

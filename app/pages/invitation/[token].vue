@@ -1,87 +1,338 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="4">
-        <v-card>
-          <v-card-title>Aceptar invitación</v-card-title>
-          <v-card-text>
-            <div v-if="loading">Cargando invitación...</div>
-            <div v-else-if="error">
-              <v-alert type="error" border="left" prominent>{{ error }}</v-alert>
-            </div>
-            <div v-else-if="success">
-              <v-alert type="success" border="left" prominent>
-                ¡Invitación aceptada! Ya puedes iniciar sesión con tu nueva contraseña.
-              </v-alert>
-              <v-btn color="primary" block @click="goToLogin">Ir a login</v-btn>
-            </div>
-            <div v-else>
-              <div>Hola {{ invitation?.email }}, completa tu registro:</div>
-              <v-form @submit.prevent="onAccept">
-                <v-text-field v-model="password" label="Contraseña" type="password" :error-messages="passwordError" required />
-                <v-btn type="submit" color="primary" block :loading="accepting">Aceptar invitación</v-btn>
-              </v-form>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div class="login-page">
+    <div class="login-card-wrap">
+      <!-- Branding -->
+      <div class="login-brand">
+        <div class="login-brand__logo">
+          <v-icon icon="mdi-heart-pulse" color="white" size="22" />
+        </div>
+        <span class="login-brand__name">TherapyWeb</span>
+      </div>
+
+      <!-- Loading -->
+      <v-card v-if="loading" class="login-card" elevation="0">
+        <div class="login-card__header">
+          <v-progress-circular indeterminate color="primary" />
+          <p class="login-card__subtitle mt-4">Cargando invitación...</p>
+        </div>
+      </v-card>
+
+      <!-- Error -->
+      <v-card v-else-if="error" class="login-card" elevation="0">
+        <div class="login-card__header">
+          <v-icon icon="mdi-alert-circle-outline" size="48" color="error" class="mb-3" />
+          <h1 class="login-card__title">Invitación no válida</h1>
+          <p class="login-card__subtitle">{{ error }}</p>
+        </div>
+        <v-btn color="primary" size="large" block rounded="md" to="/login">
+          Ir a iniciar sesión
+        </v-btn>
+      </v-card>
+
+      <!-- Linked (existing account) -->
+      <v-card v-else-if="successMessage" class="login-card" elevation="0">
+        <div class="login-card__header">
+          <v-icon icon="mdi-check-circle-outline" size="48" color="success" class="mb-3" />
+          <h1 class="login-card__title">¡Listo!</h1>
+          <p class="login-card__subtitle">{{ successMessage }}</p>
+          <p class="login-card__subtitle mt-2">Redirigiendo...</p>
+        </div>
+      </v-card>
+
+      <!-- Accept form: existing account (no password needed) -->
+      <v-card v-else-if="invitation?.accountExists" class="login-card" elevation="0">
+        <div class="login-card__header">
+          <v-icon icon="mdi-account-check-outline" size="48" color="primary" class="mb-3" />
+          <h1 class="login-card__title">Bienvenido/a, {{ invitation?.firstName }}</h1>
+          <p class="login-card__subtitle">Haz clic para aceptar y acceder con tu cuenta existente.</p>
+        </div>
+
+        <v-alert
+          v-if="submitError"
+          type="error"
+          variant="tonal"
+          rounded="md"
+          density="compact"
+          class="mb-4"
+        >
+          {{ submitError }}
+        </v-alert>
+
+        <v-btn
+          color="primary"
+          size="large"
+          block
+          rounded="md"
+          :loading="accepting"
+          @click="onAccept"
+        >
+          Aceptar invitación
+        </v-btn>
+      </v-card>
+
+      <!-- Registration form: new account (password required) -->
+      <v-card v-else class="login-card" elevation="0">
+        <div class="login-card__header">
+          <h1 class="login-card__title">Completa tu registro</h1>
+          <p class="login-card__subtitle">Hola {{ invitation?.firstName }}, crea una contraseña para acceder.</p>
+        </div>
+
+        <v-form class="login-card__form" @submit.prevent="onAccept">
+          <v-text-field
+            v-model="password"
+            label="Contraseña"
+            :type="showPassword ? 'text' : 'password'"
+            prepend-inner-icon="mdi-lock-outline"
+            :append-inner-icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+            autocomplete="new-password"
+            required
+            :error-messages="passwordError"
+            @click:append-inner="showPassword = !showPassword"
+            @input="passwordError = ''"
+          />
+
+          <v-text-field
+            v-model="passwordConfirm"
+            label="Confirmar contraseña"
+            :type="showPassword ? 'text' : 'password'"
+            prepend-inner-icon="mdi-lock-check-outline"
+            autocomplete="new-password"
+            required
+            :error-messages="confirmError"
+            @input="confirmError = ''"
+          />
+
+          <v-alert
+            v-if="submitError"
+            type="error"
+            variant="tonal"
+            rounded="md"
+            density="compact"
+            class="mb-4"
+          >
+            {{ submitError }}
+          </v-alert>
+
+          <v-btn
+            type="submit"
+            color="primary"
+            size="large"
+            block
+            rounded="md"
+            :loading="accepting"
+          >
+            Aceptar invitación
+          </v-btn>
+        </v-form>
+      </v-card>
+
+      <!-- Back -->
+      <div class="login-back">
+        <NuxtLink to="/login" class="login-back__link">
+          <v-icon icon="mdi-arrow-left" size="14" />
+          Ya tengo cuenta
+        </NuxtLink>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
 import { getInvitationByToken, acceptInvitation } from '~/services/invitationService'
+import { getProfiles } from '~/services/patientPortalService'
+
+definePageMeta({ layout: false })
 
 const route = useRoute()
-const router = useRouter()
+const auth = useAuthStore()
 const token = route.params.token as string
 
 const invitation = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
 const password = ref('')
-const passwordError = ref('')
-const success = ref(false)
+const passwordConfirm = ref('')
+const showPassword = ref(false)
+const passwordError = ref<string | string[]>('')
+const confirmError = ref('')
+const submitError = ref('')
 const accepting = ref(false)
-
+const successMessage = ref('')
 
 onMounted(async () => {
   try {
     invitation.value = await getInvitationByToken(token)
     if (invitation.value.status !== 'PENDING') {
-      error.value = 'Esta invitación ya fue utilizada, cancelada o expirada.'
+      error.value = 'Esta invitación ya fue usada o ha expirado.'
     }
-  } catch (e) {
+  } catch {
     error.value = 'Invitación no válida o expirada.'
   } finally {
     loading.value = false
   }
 })
 
-
-function validatePassword(pw: string): string {
-  if (!pw || pw.length < 8) return 'La contraseña debe tener al menos 8 caracteres.'
-  // Puedes añadir más validaciones aquí
-  return ''
-}
-
 async function onAccept() {
-  passwordError.value = validatePassword(password.value)
-  if (passwordError.value) return
+  passwordError.value = ''
+  confirmError.value = ''
+  submitError.value = ''
+
+  // Validate password only when creating a new account
+  if (!invitation.value?.accountExists) {
+    if (!password.value || password.value.length < 8) {
+      passwordError.value = 'La contraseña debe tener al menos 8 caracteres.'
+      return
+    }
+    if (!/[A-Z]/.test(password.value)) {
+      passwordError.value = 'La contraseña debe contener al menos una letra mayúscula.'
+      return
+    }
+    if (!/[0-9]/.test(password.value)) {
+      passwordError.value = 'La contraseña debe contener al menos un número.'
+      return
+    }
+    if (password.value !== passwordConfirm.value) {
+      confirmError.value = 'Las contraseñas no coinciden.'
+      return
+    }
+  }
+
   accepting.value = true
   try {
-    await acceptInvitation(token, { password: password.value })
-    success.value = true
+    const payload = invitation.value?.accountExists ? {} : { password: password.value }
+    const result = await acceptInvitation(token, payload)
+
+    auth.setAuth(result.user, result.token, result.refreshToken)
+
+    try {
+      const profiles = await getProfiles()
+      if (profiles.length === 1) {
+        auth.setProfileId(profiles[0].id)
+        successMessage.value = 'Invitación aceptada. Redirigiendo...'
+        setTimeout(() => navigateTo('/patient'), 1500)
+      } else if (profiles.length > 1) {
+        successMessage.value = 'Invitación aceptada. Redirigiendo...'
+        setTimeout(() => navigateTo('/patient/select-profile'), 1500)
+      } else {
+        await navigateTo('/patient')
+      }
+    } catch {
+      await navigateTo('/patient')
+    }
   } catch (e: any) {
-    error.value = e?.response?.data?.message || 'No se pudo aceptar la invitación.'
+    const code = e?.response?.data?.code
+    if (code === 'INVITATION_NOT_PENDING') {
+      submitError.value = 'Esta invitación no está activa.'
+    } else if (code === 'INVITATION_EXPIRED') {
+      submitError.value = 'Esta invitación ha expirado.'
+    } else if (code === 'PASSWORD_REQUIRED') {
+      submitError.value = 'Se requiere contraseña para crear la cuenta.'
+    } else {
+      const fieldErrors = e?.response?.data?.data
+      if (fieldErrors?.password?.length) {
+        passwordError.value = fieldErrors.password
+      } else {
+        submitError.value = e?.response?.data?.message || 'No se pudo aceptar la invitación.'
+      }
+    }
   } finally {
     accepting.value = false
   }
 }
-
-function goToLogin() {
-  router.push('/login')
-}
 </script>
+
+<style scoped lang="scss">
+@use '~/assets/styles/tokens' as *;
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-background;
+  padding: $space-5;
+}
+
+.login-card-wrap {
+  width: 100%;
+  max-width: 440px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  margin-bottom: $space-6;
+}
+
+.login-brand__logo {
+  width: 40px;
+  height: 40px;
+  background: $color-primary;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-brand__name {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+  letter-spacing: -0.01em;
+}
+
+.login-card {
+  padding: $space-6;
+  border: 1px solid $color-border !important;
+  border-radius: $radius-xl !important;
+  box-shadow: $shadow-md !important;
+  background: $color-surface;
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: $space-6;
+}
+
+.login-card__title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+  letter-spacing: -0.01em;
+  margin-bottom: $space-1;
+}
+
+.login-card__subtitle {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  margin: 0;
+}
+
+.login-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.login-back {
+  text-align: center;
+  margin-top: $space-4;
+}
+
+.login-back__link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover { color: $color-primary; }
+}
+</style>

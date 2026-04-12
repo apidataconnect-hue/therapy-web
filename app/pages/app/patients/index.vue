@@ -33,30 +33,22 @@
         hide-details
         class="pt-search"
       />
-      <v-tabs v-model="tab" color="primary" density="compact" class="pt-tabs">
-        <v-tab value="all">
-          Todos
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'all' ? 'primary' : undefined">
-            {{ counts.all }}
-          </v-chip>
-        </v-tab>
+      <v-tabs v-model="tab" color="primary" density="compact" class="app-tabs">
         <v-tab value="active">
           Activos
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'active' ? 'primary' : undefined">
-            {{ counts.active }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'active' }">{{ counts.active }}</span>
         </v-tab>
         <v-tab value="inactive">
           Inactivos
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'inactive' ? 'primary' : undefined">
-            {{ counts.inactive }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'inactive' }">{{ counts.inactive }}</span>
         </v-tab>
         <v-tab value="archived">
           Archivados
-          <v-chip v-if="!loading" size="x-small" class="ml-2" variant="tonal" :color="tab === 'archived' ? 'primary' : undefined">
-            {{ counts.archived }}
-          </v-chip>
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'archived' }">{{ counts.archived }}</span>
+        </v-tab>
+        <v-tab value="all">
+          Todos
+          <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'all' }">{{ counts.all }}</span>
         </v-tab>
       </v-tabs>
     </div>
@@ -144,7 +136,7 @@ const patientStore = usePatientStore()
 const router = useRouter()
 const loading = ref(false)
 const search = ref('')
-const tab = ref('all')
+const tab = ref('active')
 
 const STATUS_LABELS: Record<string, string> = {
   active:     'Activo',
@@ -202,6 +194,7 @@ onMounted(async () => {
 .pt-page {
   padding: $space-5;
   max-width: 860px;
+  margin: 0 auto;
 
   &__header {
     display: flex;
@@ -254,10 +247,6 @@ onMounted(async () => {
 
 .pt-search {
   max-width: 380px;
-}
-
-.pt-tabs {
-  border-bottom: 1px solid $color-border;
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -356,6 +345,39 @@ onMounted(async () => {
 
   &__chevron {
     color: $color-text-muted;
+  }
+}
+
+// ── Tab count badge ───────────────────────────────────────────────────────────
+:deep(.app-tabs) {
+  .v-tab {
+    border-radius: $radius-md $radius-md 0 0;
+    transition: background 0.15s, color 0.15s;
+
+    &.v-tab--selected {
+      background: $color-primary-muted !important;
+    }
+  }
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: $space-2;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  background: rgba($color-text-muted, 0.12);
+  color: $color-text-muted;
+  transition: background 0.2s, color 0.2s;
+
+  &--active {
+    background: $color-primary;
+    color: #fff;
   }
 }
 

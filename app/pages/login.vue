@@ -80,6 +80,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { login } from '~/services/authService'
+import { getProfiles } from '~/services/patientPortalService'
 
 definePageMeta({ layout: false })
 
@@ -101,13 +102,29 @@ async function onLogin() {
   try {
     const { user, token, refreshToken } = await login(email.value, password.value)
     auth.setAuth(user, token, refreshToken)
+
+    if (auth.isPatient) {
+      try {
+        const profiles = await getProfiles()
+        if (profiles.length === 1) {
+          auth.setProfileId(profiles[0].id)
+          await navigateTo('/patient')
+        } else if (profiles.length > 1) {
+          await navigateTo('/patient/select-profile')
+        } else {
+          await navigateTo('/patient')
+        }
+      } catch {
+        await navigateTo('/patient')
+      }
+    } else {
+      await navigateTo('/app/therapist/calendar')
+    }
   } catch {
     errorMessage.value = 'Credenciales incorrectas. Verifica tu correo y contraseña.'
+  } finally {
     loading.value = false
-    return
   }
-  loading.value = false
-  await navigateTo('/app/dashboard')
 }
 </script>
 

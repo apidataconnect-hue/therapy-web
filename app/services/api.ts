@@ -27,6 +27,11 @@ api.interceptors.request.use((config) => {
   config.headers['deviceId'] = DEVICE_ID
   config.headers['deviceType'] = DEVICE_TYPE
   config.headers['locale'] = 'es'
+  // Prevent browser from serving stale cached API responses on client-side navigation
+  if (!config.method || config.method.toLowerCase() === 'get') {
+    config.headers['Cache-Control'] = 'no-cache'
+    config.headers['Pragma'] = 'no-cache'
+  }
   try {
     const auth = useAuthStore()
     if (auth.token) {

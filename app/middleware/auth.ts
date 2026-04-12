@@ -7,4 +7,17 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (!auth.isAuthenticated) {
     return navigateTo('/login')
   }
+
+  const isPatientRoute = to.path === '/patient' || to.path.startsWith('/patient/')
+  const isAppRoute = to.path === '/app' || to.path.startsWith('/app/')
+
+  // Patient routes require the PATIENT role (dual-role users are allowed through)
+  if (isPatientRoute && !auth.isPatient) {
+    return navigateTo(auth.isTherapist ? '/app/therapist/calendar' : '/login')
+  }
+
+  // App routes require the THERAPIST role (dual-role users are allowed through)
+  if (isAppRoute && !auth.isTherapist) {
+    return navigateTo(auth.isPatient ? '/patient' : '/login')
+  }
 })

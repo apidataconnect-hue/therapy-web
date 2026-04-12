@@ -2,21 +2,13 @@
 <template>
   <div class="db-page">
 
-    <!-- ── PATIENT ────────────────────────────────────────────────────────────── -->
-    <template v-if="role === 'PATIENT'">
-      <v-card>
-        <v-card-title>Mi información</v-card-title>
-        <v-card-text><NuxtLink to="/app/profile">Ver mi perfil</NuxtLink></v-card-text>
-      </v-card>
-    </template>
-
     <!-- ── ADMIN ──────────────────────────────────────────────────────────────── -->
-    <template v-else-if="role === 'ADMIN'">
+    <template v-if="role === 'ADMIN'">
       <v-card><v-card-title>Panel de administración</v-card-title></v-card>
     </template>
 
     <!-- ── THERAPIST ──────────────────────────────────────────────────────────── -->
-    <template v-else-if="role === 'THERAPIST'">
+    <template v-else>
 
       <!-- Header -->
       <div class="db-header">
@@ -60,7 +52,7 @@
           </div>
           <div v-else-if="tagChartSeries.length === 0" class="db-card__center">
             <v-icon icon="mdi-tag-off-outline" size="40" color="disabled" />
-            <p class="mt-2 text-medium-emphasis" style="font-size:0.8rem">Sin etiquetas asignadas todavía</p>
+            <p class="mt-2 text-medium-emphasis" style="font-size:0.8rem">Sin procesos registrados todavía</p>
           </div>
           <template v-else>
             <client-only>
@@ -130,13 +122,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useTagStore } from '~/stores/tag'
 import { getProcesses } from '~/services/processService'
 import { getPatients } from '~/services/patientService'
 
-definePageMeta({ middleware: ['auth'] })
+definePageMeta({ middleware: ['auth', 'role'], role: 'THERAPIST' })
 
 const auth     = useAuthStore()
 const tagStore = useTagStore()
@@ -147,7 +139,8 @@ const loading       = ref(true)
 const processes     = ref<any[]>([])
 const totalPatients = ref(0)
 
-onMounted(async () => {
+async function loadDashboard() {
+  loading.value = true
   try {
     const [all, pData] = await Promise.all([
       getProcesses({ size: 500 }),
@@ -161,7 +154,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(() => loadDashboard())
+onActivated(() => loadDashboard())
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
 const statusCount = computed(() => {
@@ -183,14 +179,22 @@ const liveTagIds = computed(() => new Set(tagStore.tags.map(t => t.id)))
 
 const tagStats = computed(() => {
   const m = new Map<string, { name: string; color: string; count: number }>()
+  let untaggedCount = 0
   for (const p of processes.value) {
-    for (const t of (p.tags ?? [])) {
-      if (!liveTagIds.value.has(t.id)) continue  // tag was deleted — skip
-      if (!m.has(t.id)) m.set(t.id, { name: t.name, color: t.color ?? '#9E9E9E', count: 0 })
-      m.get(t.id)!.count++
+    if (p.processStatus === 'draft') continue
+    const validTags = (p.tags ?? []).filter((t: any) => liveTagIds.value.has(t.id))
+    if (validTags.length === 0) {
+      untaggedCount++
+    } else {
+      for (const t of validTags) {
+        if (!m.has(t.id)) m.set(t.id, { name: t.name, color: t.color ?? '#9E9E9E', count: 0 })
+        m.get(t.id)!.count++
+      }
     }
   }
-  return Array.from(m.values()).sort((a, b) => b.count - a.count)
+  const result = Array.from(m.values()).sort((a, b) => b.count - a.count)
+  if (untaggedCount > 0) result.push({ name: 'Otros', color: '#C8C0D8', count: untaggedCount })
+  return result
 })
 
 const tagChartSeries = computed(() => tagStats.value.map(t => t.count))
@@ -288,7 +292,7 @@ const quickLinks = [
   { to: '/app/therapist/therapies', title: 'Terapias',   desc: 'Gestiona los procesos',      icon: 'mdi-clipboard-pulse-outline', color: '#5B2A86', bg: '#F2EBF9' },
   { to: '/app/patients',            title: 'Pacientes',  desc: 'Consulta tus pacientes',     icon: 'mdi-account-group-outline',   color: '#1A7A8A', bg: '#e4f5f7' },
   { to: '/app/therapist/sessions',  title: 'Sesiones',   desc: 'Historial de citas',         icon: 'mdi-calendar-check-outline',  color: '#2E8B57', bg: '#edf7f1' },
-  { to: '/app/therapist/calendar',  title: 'Calendario', desc: 'Planifica nuevas citas',     icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
+  { to: '/app/therapist/calendar',  title: 'Agenda', desc: 'Planifica nuevas citas',     icon: 'mdi-calendar-month-outline',  color: '#C77B2C', bg: '#FEF4E6' },
 ]
 </script>
 
@@ -298,6 +302,7 @@ const quickLinks = [
 .db-page {
   padding: $space-5;
   max-width: 1000px;
+  margin: 0 auto;
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -520,5 +525,144 @@ const quickLinks = [
 @keyframes db-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
+}
+
+// ── Patient portal ────────────────────────────────────────────────────────────
+.ptb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-4;
+
+  &__title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-main;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: $space-1 0 0;
+  }
+}
+
+.ptb-tabs {
+  margin-bottom: $space-4;
+}
+
+.ptb-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.ptb-section {
+  margin-bottom: $space-4;
+
+  &__title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    margin: 0 0 $space-3;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: $space-3;
+  }
+}
+
+.ptb-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.ptb-apt {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  flex-wrap: wrap;
+
+  &--past {
+    opacity: 0.65;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-main;
+    text-transform: capitalize;
+  }
+
+  &__time {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  &__meta {
+    display: flex;
+    gap: $space-1;
+    flex: 1;
+  }
+
+  &__join {
+    margin-left: auto;
+  }
+}
+
+.ptb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.ptb-profile {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-4;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    padding: $space-3 0;
+    border-bottom: 1px solid $color-divider;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &__label {
+    width: 180px;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-muted;
+  }
+
+  &__value {
+    font-size: $font-size-sm;
+    color: $color-text-main;
+  }
 }
 </style>

@@ -28,7 +28,7 @@
             </h1>
             <p class="landing-hero__text">
               Un espacio digital calmado y profesional para terapeutas y pacientes.
-              Sesiones, calendarios y seguimiento en un solo lugar.
+              Sesiones, agenda y seguimiento en un solo lugar.
             </p>
             <div class="landing-hero__actions">
               <NuxtLink to="/login">
@@ -82,7 +82,7 @@
               <div class="role-card__content">
                 <h3 class="role-card__title">Soy Paciente</h3>
                 <p class="role-card__text">
-                  Consulta tus sesiones, terapias asignadas y calendario de citas en un espacio privado y seguro.
+                  Consulta tus sesiones, terapias asignadas y agenda de citas en un espacio privado y seguro.
                 </p>
                 <div class="role-card__features">
                   <span v-for="f in patientFeatures" :key="f" class="role-card__feature">
@@ -109,7 +109,7 @@
 definePageMeta({ layout: false })
 
 const therapistFeatures = ['Gestión de pacientes', 'Agenda interactiva', 'Historial de sesiones', 'Seguimiento de terapias']
-const patientFeatures   = ['Ver mis sesiones', 'Calendario de citas', 'Acceso a terapias', 'Perfil personal']
+const patientFeatures   = ['Ver mis sesiones', 'Agenda de citas', 'Acceso a terapias', 'Perfil personal']
 </script>
 
 <style scoped lang="scss">
