@@ -1,7 +1,10 @@
-.PHONY: development build preview lint lint-fix install deploy
+.PHONY: development build preview lint lint-fix install deploy deploy-prod
 
 # Local Docker backend (nginx on port 8889)
 API_BASE_URL ?= http://localhost:8889
+
+# Production API
+PROD_API_URL ?= https://api.apidataconnect.com
 
 # Production server
 PROD_HOST  ?= root@46.101.132.64
@@ -24,6 +27,9 @@ deploy: build
 		pm2 save"
 	rm -f therapy-web.tar.gz
 	@echo "✓ Deployed to production"
+
+deploy-prod:
+	API_BASE_URL=$(PROD_API_URL) $(MAKE) deploy
 
 preview:
 	npm run preview
