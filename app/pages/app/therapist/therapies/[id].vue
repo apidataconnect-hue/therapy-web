@@ -237,7 +237,12 @@
             <p class="td-empty__text">Sin sesiones próximas</p>
           </div>
           <div v-else class="td-sessions">
-            <div v-for="session in upcomingSessions" :key="session.id" class="td-session">
+            <NuxtLink
+              v-for="session in upcomingSessions"
+              :key="session.id"
+              :to="`/app/therapist/sessions/${session.id}`"
+              class="td-session td-session--link"
+            >
               <div class="td-session__date-block">
                 <span class="td-session__day">{{ sessionDay(session.startAt) }}</span>
                 <span class="td-session__month">{{ sessionMonth(session.startAt) }}</span>
@@ -256,7 +261,8 @@
               <v-chip :color="apptStatusColor(session.appointmentStatus)" size="x-small" class="td-session__status">
                 {{ apptStatusLabel(session.appointmentStatus) }}
               </v-chip>
-            </div>
+              <v-icon icon="mdi-chevron-right" size="16" class="td-session__chevron" />
+            </NuxtLink>
           </div>
 
           <!-- Pasadas -->
@@ -269,7 +275,12 @@
             <p class="td-empty__text">Sin sesiones anteriores</p>
           </div>
           <div v-else class="td-sessions">
-            <div v-for="session in pastSessions" :key="session.id" class="td-session">
+            <NuxtLink
+              v-for="session in pastSessions"
+              :key="session.id"
+              :to="`/app/therapist/sessions/${session.id}`"
+              class="td-session td-session--link"
+            >
               <div class="td-session__date-block">
                 <span class="td-session__day">{{ sessionDay(session.startAt) }}</span>
                 <span class="td-session__month">{{ sessionMonth(session.startAt) }}</span>
@@ -288,13 +299,14 @@
               <v-chip :color="apptStatusColor(session.appointmentStatus)" size="x-small" class="td-session__status">
                 {{ apptStatusLabel(session.appointmentStatus) }}
               </v-chip>
-            </div>
+              <v-icon icon="mdi-chevron-right" size="16" class="td-session__chevron" />
+            </NuxtLink>
           </div>
         </template>
       </div>
     </template>
 
-    <!-- Confirm dialog -->
+    <!-- Confirm dialog (process actions) -->
     <v-dialog v-model="confirmDialog" max-width="400">
       <v-card>
         <v-card-title class="text-body-1 font-weight-bold pt-5 px-5">{{ confirmTitle }}</v-card-title>
@@ -880,6 +892,34 @@ onMounted(async () => {
   border-radius: $radius-lg;
   padding: $space-3 $space-4;
 
+  &--clickable {
+    cursor: pointer;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+
+    &:hover {
+      border-color: rgb(var(--v-theme-primary));
+      box-shadow: $shadow-sm;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgb(var(--v-theme-primary));
+      outline-offset: 2px;
+    }
+  }
+
+  &--link {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+
+    &:hover {
+      border-color: rgb(var(--v-theme-primary));
+      box-shadow: $shadow-sm;
+    }
+  }
+
   &__date-block {
     flex-shrink: 0;
     width: 40px;
@@ -941,6 +981,11 @@ onMounted(async () => {
   &__status {
     flex-shrink: 0;
   }
+
+  &__chevron {
+    flex-shrink: 0;
+    color: $color-text-muted;
+  }
 }
 
 .td-subsection-label {
@@ -962,5 +1007,7 @@ onMounted(async () => {
     margin-top: 0;
   }
 }
+
+
 </style>
 

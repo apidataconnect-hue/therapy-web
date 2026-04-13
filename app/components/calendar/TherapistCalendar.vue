@@ -50,9 +50,10 @@ const props = defineProps({
   events: { type: Array, required: true },
   editable: { type: Boolean, default: true },
   initialView: { type: String, default: 'timeGridWeek' },
+  showWeekends: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['eventClick', 'dateClick', 'eventDrop', 'eventResize', 'patientNavigate'])
+const emit = defineEmits(['eventClick', 'dateClick', 'eventDrop', 'eventResize', 'patientNavigate', 'sessionNavigate', 'toggleWeekends'])
 const calendarRef = ref()
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ function renderEventContent(arg: any) {
   const typeLabel  = TYPE_LABELS[apptType] ?? apptType
   const cancelled  = status === 'cancelled'
 
-  // Profile link — top-right corner
+  // Profile link — next to patient name
   const profileLink = h('a', {
     class: 'fc-event-inner__link',
     title: 'Ver paciente',
@@ -121,41 +122,54 @@ function renderEventContent(arg: any) {
       e.stopPropagation()
       emit('patientNavigate', apptId)
     },
-  }, '\u2197')
+  }, h('i', { class: 'mdi mdi-account-circle-outline fc-event-inner__link-icon' }))
 
-  // Type badge: icon + label
-  const typeBadge = svgPath
-    ? h('span', { class: 'fc-event-inner__type' }, [
-        h('svg', {
-          viewBox: '0 0 24 24',
-          xmlns: 'http://www.w3.org/2000/svg',
-          fill: 'currentColor',
-          width: '10',
-          height: '10',
-        }, [
-          h('path', { d: svgPath }),
-        ]),
-        h('span', typeLabel),
-      ])
+  // Session note link — next to time
+  const sessionLink = h('a', {
+    class: 'fc-event-inner__link fc-event-inner__link--info',
+    title: 'Ver nota de sesión',
+    onClick: (e: MouseEvent) => {
+      e.stopPropagation()
+      emit('sessionNavigate', apptId)
+    },
+  }, h('i', { class: 'mdi mdi-arrow-top-right fc-event-inner__link-icon' }))
+
+  // Type icon only (no text)
+  const typeIconEl = svgPath
+    ? h('svg', {
+        viewBox: '0 0 24 24',
+        xmlns: 'http://www.w3.org/2000/svg',
+        fill: 'currentColor',
+        width: '10',
+        height: '10',
+        class: 'fc-event-inner__type-icon',
+      }, [h('path', { d: svgPath })])
     : null
 
-  // Status badge — shown for all statuses
+  // Status badge
   const statusBadge = status
     ? h('span', { class: `fc-event-inner__status fc-event-inner__status--${status}` }, STATUS_LABELS[status] ?? status)
     : null
 
   return h('div', { class: ['fc-event-inner', cancelled ? 'fc-event-inner--cancelled' : ''] }, [
-    // Row 1: time + profile link
+    // Row 1: time + session note link
     h('div', { class: 'fc-event-inner__header' }, [
       h('span', { class: 'fc-event-inner__time' }, timeText),
+      sessionLink,
+    ]),
+    // Row 2: patient name + profile link
+    h('div', { class: 'fc-event-inner__title-row' }, [
+      h('span', { class: 'fc-event-inner__title' }, title),
       profileLink,
     ]),
-    // Row 2: patient name
-    h('span', { class: 'fc-event-inner__title' }, title),
-    // Row 3: type badge
-    typeBadge ? h('div', { class: 'fc-event-inner__meta' }, [typeBadge]) : null,
-    // Row 4: status badge (bottom)
-    statusBadge ? h('div', { class: 'fc-event-inner__status-row' }, [statusBadge]) : null,
+    // Row 3: appointment type
+    typeLabel ? h('div', { class: 'fc-event-inner__type-row' }, [
+      h('span', { class: 'fc-event-inner__type-label' }, typeLabel),
+    ]) : null,
+    // Row 4: status (footer)
+    h('div', { class: 'fc-event-inner__footer' }, [
+      statusBadge,
+    ]),
   ])
 }
 
@@ -164,10 +178,16 @@ const calendarOptions = ref({
   locale: 'es',
   timeZone: 'local',
   initialView: props.initialView,
+  customButtons: {
+    toggleWeekends: {
+      text: props.showWeekends ? 'Ocultar finde' : 'Mostrar finde',
+      click: () => emit('toggleWeekends'),
+    },
+  },
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: 'dayGridMonth,timeGridWeek,timeGridDay',
+    right: 'toggleWeekends dayGridMonth,timeGridWeek,timeGridDay',
   },
   buttonText: {
     today: 'Hoy',
@@ -175,9 +195,12 @@ const calendarOptions = ref({
     week: 'Semana',
     day: 'Día',
   },
-  slotDuration: '00:30:00',
+  slotDuration: '00:15:00',
+  slotLabelInterval: '00:30:00',
   slotMinTime: '07:00:00',
-  slotMaxTime: '22:00:00',
+  slotMaxTime: '23:00:00',
+  height: '100%',
+  expandRows: false,
   slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false } as any,
   eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false } as any,
   nowIndicator: true,
@@ -187,7 +210,7 @@ const calendarOptions = ref({
     startTime: '08:00',
     endTime: '20:00',
   },
-  weekends: true,
+  weekends: props.showWeekends,
   firstDay: 1,
   events: props.events,
   editable: props.editable,
@@ -239,6 +262,16 @@ watch(() => props.events, (newEvents) => {
   api.removeAllEvents()
   for (const ev of newEvents) api.addEvent(ev as any)
 })
+
+watch(() => props.showWeekends, (val) => {
+  const api = calendarRef.value?.getApi()
+  if (api) {
+    api.setOption('weekends', val)
+    const el = calendarRef.value?.$el as HTMLElement | undefined
+    const btn = el?.querySelector('.fc-toggleWeekends-button') as HTMLButtonElement | null
+    if (btn) btn.textContent = val ? 'Ocultar finde' : 'Mostrar finde'
+  }
+})
 </script>
 
 <style scoped>
@@ -246,14 +279,53 @@ watch(() => props.events, (newEvents) => {
   height: 100%;
 }
 .therapist-calendar {
-  height: calc(100vh - 220px);
-  min-height: 500px;
+  height: 100%;
 }
 </style>
 
 <style>
+.fc-timegrid-slot-minor {
+  border-top-style: dashed !important;
+  border-top-color: rgba(0,0,0,0.1) !important;
+}
+
+/* Align time label text to the grid line */
+.fc-timegrid-slot-label {
+  vertical-align: top !important;
+}
+
+.fc-timegrid-slot-label-cushion {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  transform: translateY(-100%);
+  display: inline-block;
+}
+
+.fc-toggleWeekends-button {
+  margin-right: 12px !important;
+}
+
+/* Make event cards snap to grid lines */
+.fc-timegrid-event {
+  margin-bottom: 0 !important;
+}
+.fc-event-main {
+  padding: 0 !important;
+}
+
+/* Soften event card background */
+.fc-timegrid-event .fc-event-main,
+.fc-timegrid-event {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.fc-timegrid-event {
+  opacity: 0.88;
+}
+
 .fc-event--past {
-  opacity: 0.45 !important;
+  opacity: 0.4 !important;
 }
 
 .fc-event-inner--cancelled .fc-event-inner__title {
@@ -279,11 +351,11 @@ watch(() => props.events, (newEvents) => {
 .fc-event-inner__status {
   display: inline-flex;
   align-items: center;
-  font-size: 0.64rem;
+  font-size: 0.80rem;
   font-weight: 600;
   line-height: 1;
   border-radius: 3px;
-  padding: 1px 5px;
+  padding: 6px 10px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   background: rgba(255, 255, 255, 0.22);
@@ -299,13 +371,13 @@ watch(() => props.events, (newEvents) => {
 .fc-event-inner {
   display: flex;
   flex-direction: column;
-  padding: 3px 6px 4px;
+  padding: 4px 7px 5px;
   overflow: hidden;
   height: 100%;
-  gap: 1px;
+  gap: 18px;
 }
 
-/* ── Row 1: time + profile link ── */
+/* ── Row 1: time + session link ── */
 .fc-event-inner__header {
   display: flex;
   align-items: center;
@@ -315,9 +387,9 @@ watch(() => props.events, (newEvents) => {
 }
 
 .fc-event-inner__time {
-  font-size: 0.6rem;
+  font-size: 1rem;
   opacity: 0.82;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.3;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -328,61 +400,81 @@ watch(() => props.events, (newEvents) => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
   color: inherit;
-  opacity: 0.7;
-  background: rgba(255, 255, 255, 0.18);
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.25);
   text-decoration: none;
   line-height: 1;
   transition: opacity 150ms ease, background 150ms ease;
   cursor: pointer;
 }
 
-.fc-event-inner__link:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.35);
+.fc-event-inner__link-icon {
+  font-size: 25px;
+  line-height: 1;
 }
 
-/* ── Row 2: patient name ── */
+.fc-event-inner__link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.fc-event-inner__link--info {
+  font-style: normal;
+}
+
+/* ── Row 2: patient name + profile link ── */
+.fc-event-inner__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
 .fc-event-inner__title {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Row 3: appointment type label ── */
+.fc-event-inner__type-row {
   flex-shrink: 0;
 }
 
-/* ── Row 3: type badge ── */
-.fc-event-inner__meta {
-  display: flex;
-  align-items: center;
-  margin-top: 1px;
+.fc-event-inner__type-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
-/* ── Row 4: status badge ── */
-.fc-event-inner__status-row {
+/* ── Row 4: footer — status ── */
+.fc-event-inner__footer {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   margin-top: auto;
   padding-top: 2px;
 }
 
-.fc-event-inner__type {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.64rem;
-  font-weight: 500;
-  opacity: 0.82;
-  line-height: 1;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 3px;
-  padding: 1px 4px 1px 3px;
+.fc-event-inner__type-icon {
+  opacity: 0.75;
+  flex-shrink: 0;
 }
 
 /* ── Event hover tooltip ─────────────────────────────────────────────────── */

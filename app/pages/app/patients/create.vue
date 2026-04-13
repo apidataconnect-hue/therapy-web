@@ -57,6 +57,19 @@
           @update:model-value="onIsMinorChange"
         />
 
+        <template v-if="form.isMinor">
+          <div class="cp-card__row cp-card__row--single">
+            <v-text-field
+              v-model="form.birthDate"
+              label="Fecha de nacimiento"
+              type="date"
+              variant="outlined"
+              density="compact"
+              hide-details="auto"
+            />
+          </div>
+        </template>
+
         <template v-if="!form.isMinor">
           <div class="cp-card__row">
             <v-text-field
@@ -225,6 +238,7 @@ const form = reactive({
   firstName: '',
   lastName: '',
   isMinor: false,
+  birthDate: '',
   email: '',
   phone: '',
   notesAdministrative: '',
@@ -265,6 +279,7 @@ function onIsMinorChange() {
     fieldErrors.email = []
   } else {
     guardians.value = []
+    form.birthDate = ''
   }
 }
 
@@ -301,6 +316,7 @@ async function onSubmit() {
       payload.email = form.email.trim()
       if (form.phone?.trim()) payload.phone = form.phone.trim()
     } else {
+      if (form.birthDate) payload.birthDate = form.birthDate
       payload.guardians = guardians.value.map(g => ({
         fullName: g.fullName,
         relationshipType: g.relationshipType,
@@ -345,6 +361,7 @@ async function onSubmit() {
 .cp-page {
   padding: $space-5;
   max-width: 660px;
+  margin: 0 auto;
 
   &__header {
     margin-bottom: $space-5;
@@ -404,6 +421,11 @@ async function onSubmit() {
     grid-template-columns: 1fr 1fr;
     gap: $space-3;
     margin-bottom: $space-3;
+
+    &--single {
+      grid-template-columns: 1fr;
+      max-width: 320px;
+    }
   }
 
   &--guardian {

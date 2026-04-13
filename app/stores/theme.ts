@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 
-export const CAL_EVENT_SCHEDULED = '#5B2A86'
-export const CAL_EVENT_COMPLETED = '#2E8B57'
-export const CAL_EVENT_CANCELLED = '#9E9E9E'
+export const CAL_EVENT_SCHEDULED = '#7C4BA6'
+export const CAL_EVENT_COMPLETED = '#3DA870'
+export const CAL_EVENT_CANCELLED = '#BDBDBD'
 
 export interface Palette {
   id: string

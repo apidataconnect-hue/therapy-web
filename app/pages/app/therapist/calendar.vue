@@ -56,12 +56,15 @@
         <TherapistCalendar
           :events="events"
           :editable="true"
+          :show-weekends="showWeekends"
           initial-view="timeGridWeek"
           @eventClick="onEventClick"
           @dateClick="onDateClick"
           @eventDrop="onEventDrop"
           @eventResize="onEventResize"
           @patientNavigate="onPatientNavigate"
+          @sessionNavigate="onSessionNavigate"
+          @toggleWeekends="showWeekends = !showWeekends"
         />
       </div>
 
@@ -332,14 +335,7 @@ function sessionTimeRange(start: string, end: string): string {
 }
 
 function openFromPanel(session: any) {
-  onEventClick({
-    event: {
-      id: session.id,
-      extendedProps: session.extendedProps,
-      startStr: session.start,
-      endStr: session.end,
-    },
-  })
+  router.push(`/app/therapist/sessions/${session.id}`)
 }
 
 function onNewAppointmentForDay() {
@@ -353,6 +349,7 @@ function onNewAppointmentForDay() {
 const events = ref<any[]>([])
 const patients = ref<any[]>([])
 const processes = ref<any[]>([])
+const showWeekends = ref(false)
 const showModal = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
@@ -521,12 +518,17 @@ async function onPatientNavigate(apptId: string) {
   }
 }
 
+function onSessionNavigate(apptId: string) {
+  router.push(`/app/therapist/sessions/${apptId}`)
+}
+
 async function onEventDrop(info: any) {
   try {
     await updateAppointment(info.event.id, {
       startAt: new Date(info.event.startStr).toISOString(),
       endAt: new Date(info.event.endStr).toISOString(),
     })
+    await loadEvents()
   } catch {
     info.revert()
   }
@@ -538,6 +540,7 @@ async function onEventResize(info: any) {
       startAt: new Date(info.event.startStr).toISOString(),
       endAt: new Date(info.event.endStr).toISOString(),
     })
+    await loadEvents()
   } catch {
     info.revert()
   }
@@ -638,9 +641,10 @@ async function confirmDelete() {
 .cal-page {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 30px);
   padding: $space-5 $space-5;
   background: $color-background;
+  overflow: hidden;
 }
 
 .cal-split {
@@ -652,7 +656,7 @@ async function confirmDelete() {
 
 // ── Day panel ─────────────────────────────────────────────────────────────────
 .cal-panel {
-  width: 272px;
+  width: 220px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -819,6 +823,7 @@ async function confirmDelete() {
 .cal-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: $color-surface;
