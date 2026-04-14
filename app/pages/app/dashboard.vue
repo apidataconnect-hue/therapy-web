@@ -12,15 +12,19 @@
 
       <!-- Header -->
       <div class="db-header">
-        <h1 class="db-header__title">Panel</h1>
-        <p class="db-header__subtitle">Resumen de tu actividad clínica</p>
+        <div>
+          <h1 class="db-header__title">Panel</h1>
+          <p class="db-header__subtitle">Resumen de tu actividad clínica</p>
+        </div>
+        <span class="db-header__date">{{ todayLabel }}</span>
       </div>
 
       <!-- KPI cards -->
+      <p class="db-section-label">Métricas principales</p>
       <div class="db-kpis">
         <div v-for="kpi in kpis" :key="kpi.label" class="db-kpi">
           <div class="db-kpi__icon-wrap" :style="{ background: kpi.bg }">
-            <v-icon :icon="kpi.icon" size="22" :color="kpi.color" />
+            <v-icon :icon="kpi.icon" size="24" :color="kpi.color" />
           </div>
           <div class="db-kpi__body">
             <span v-if="loading" class="db-kpi__value db-kpi__value--skeleton" />
@@ -31,12 +35,13 @@
       </div>
 
       <!-- Charts -->
+      <p class="db-section-label">Actividad clínica</p>
       <div class="db-charts">
 
         <!-- Donut: by tag -->
         <div class="db-card">
           <div class="db-card__header">
-            <v-icon icon="mdi-tag-multiple-outline" size="18" color="primary" class="mr-2" />
+            <v-icon icon="mdi-tag-multiple-outline" size="20" color="primary" class="mr-2" />
             <span class="db-card__title">Terapias por etiqueta</span>
             <v-chip
               v-if="!loading"
@@ -80,7 +85,7 @@
         <!-- Bar: by status -->
         <div class="db-card">
           <div class="db-card__header">
-            <v-icon icon="mdi-clipboard-list-outline" size="18" color="primary" class="mr-2" />
+            <v-icon icon="mdi-clipboard-list-outline" size="20" color="primary" class="mr-2" />
             <span class="db-card__title">Terapias por estado</span>
           </div>
           <div v-if="loading" class="db-card__center">
@@ -99,6 +104,7 @@
       </div>
 
       <!-- Quick links -->
+      <p class="db-section-label">Accesos rápidos</p>
       <div class="db-links">
         <NuxtLink
           v-for="link in quickLinks"
@@ -133,7 +139,7 @@ definePageMeta({ middleware: ['auth', 'role'], role: 'THERAPIST' })
 const auth     = useAuthStore()
 const tagStore = useTagStore()
 const role     = computed(() => auth.userRole)
-
+const todayLabel = computed(() => new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }))
 // ── State ─────────────────────────────────────────────────────────────────────
 const loading       = ref(true)
 const processes     = ref<any[]>([])
@@ -213,18 +219,18 @@ const donutOptions = computed(() => ({
   plotOptions: {
     pie: {
       donut: {
-        size: '68%',
+        size: '72%',
         labels: {
           show: true,
           total: {
             show:       true,
             label:      'Procesos',
-            fontSize:   '13px',
-            fontWeight: 500,
+            fontSize:   '11px',
+            fontWeight: 400,
             color:      '#9588A8',
             formatter:  (w: any) => w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0),
           },
-          value: { fontSize: '22px', fontWeight: 700, color: '#1A0A2E', offsetY: 2 },
+          value: { fontSize: '26px', fontWeight: 700, color: '#1A0A2E', offsetY: 2 },
         },
       },
     },
@@ -256,7 +262,7 @@ const barOptions = computed(() => ({
     animations: { enabled: true, speed: 500 },
   },
   plotOptions: {
-    bar: { borderRadius: 6, borderRadiusApplication: 'end', columnWidth: '52%', distributed: true },
+    bar: { borderRadius: 8, borderRadiusApplication: 'end', columnWidth: '58%', distributed: true },
   },
   colors: Object.values(STATUS_META).map(m => m.color),
   xaxis: {
@@ -300,26 +306,47 @@ const quickLinks = [
 @use '~/assets/styles/tokens' as *;
 
 .db-page {
-  padding: $space-5;
-  max-width: 1000px;
+  padding: $space-6 $space-5;
+  max-width: 1160px;
   margin: 0 auto;
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
 .db-header {
-  margin-bottom: $space-5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-7;
 
   &__title {
-    font-size: $font-size-2xl;
+    font-size: $font-size-3xl;
     font-weight: $font-weight-bold;
     color: $color-text-main;
+    letter-spacing: -0.02em;
+    line-height: $line-height-tight;
     margin: 0 0 $space-1;
   }
 
   &__subtitle {
     font-size: $font-size-sm;
-    color: $color-text-muted;
+    color: $color-text-secondary;
     margin: 0;
+  }
+
+  &__date {
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    font-weight: $font-weight-medium;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius-full;
+    padding: $space-1 $space-3;
+    text-transform: capitalize;
+    white-space: nowrap;
+    line-height: 1.6;
+    align-self: flex-start;
   }
 }
 
@@ -327,8 +354,8 @@ const quickLinks = [
 .db-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: $space-3;
-  margin-bottom: $space-5;
+  gap: $space-4;
+  margin-bottom: $space-6;
 
   @media (max-width: 700px) { grid-template-columns: repeat(2, 1fr); }
 }
@@ -336,18 +363,25 @@ const quickLinks = [
 .db-kpi {
   display: flex;
   align-items: center;
-  gap: $space-3;
+  gap: $space-4;
   background: $color-surface;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  padding: $space-4;
-  box-shadow: $shadow-xs;
+  border-radius: $radius-xl;
+  padding: $space-5;
+  box-shadow: $shadow-sm;
+  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $color-primary-muted;
+    transform: translateY(-1px);
+  }
 
   &__icon-wrap {
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: $radius-md;
+    width: 50px;
+    height: 50px;
+    border-radius: $radius-lg;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -356,19 +390,20 @@ const quickLinks = [
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
   }
 
   &__value {
-    font-size: $font-size-xl;
+    font-size: $font-size-3xl;
     font-weight: $font-weight-bold;
     color: $color-text-main;
     line-height: 1;
+    letter-spacing: -0.02em;
 
     &--skeleton {
       display: inline-block;
-      width: 32px;
-      height: 20px;
+      width: 48px;
+      height: 28px;
       background: $color-border;
       border-radius: $radius-sm;
       animation: db-pulse 1.4s ease-in-out infinite;
@@ -380,7 +415,7 @@ const quickLinks = [
     color: $color-text-muted;
     font-weight: $font-weight-medium;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
   }
 }
 
@@ -388,8 +423,8 @@ const quickLinks = [
 .db-charts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $space-4;
-  margin-bottom: $space-5;
+  gap: $space-5;
+  margin-bottom: $space-6;
 
   @media (max-width: 700px) { grid-template-columns: 1fr; }
 }
@@ -397,20 +432,23 @@ const quickLinks = [
 .db-card {
   background: $color-surface;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  padding: $space-4;
-  box-shadow: $shadow-xs;
+  border-radius: $radius-xl;
+  padding: $space-5;
+  box-shadow: $shadow-sm;
 
   &__header {
     display: flex;
     align-items: center;
-    margin-bottom: $space-3;
+    padding-bottom: $space-4;
+    border-bottom: 1px solid $color-divider;
+    margin-bottom: $space-4;
   }
 
   &__title {
-    font-size: $font-size-base;
+    font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
     color: $color-text-main;
+    line-height: $line-height-tight;
   }
 
   &__center {
@@ -418,7 +456,7 @@ const quickLinks = [
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 220px;
+    min-height: 240px;
   }
 }
 
@@ -426,23 +464,24 @@ const quickLinks = [
 .db-legend {
   display: flex;
   flex-direction: column;
-  gap: $space-1;
-  padding-top: $space-2;
+  gap: $space-2;
+  padding-top: $space-3;
   border-top: 1px solid $color-divider;
-  margin-top: $space-2;
+  margin-top: $space-3;
 
   &__item {
     display: flex;
     align-items: center;
     gap: $space-2;
-    font-size: $font-size-xs;
+    font-size: $font-size-sm;
     color: $color-text-secondary;
+    padding: 2px 0;
   }
 
   &__dot {
     flex-shrink: 0;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
   }
 
@@ -455,8 +494,9 @@ const quickLinks = [
   }
 
   &__count {
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-semibold;
     color: $color-text-main;
+    font-size: $font-size-sm;
     min-width: 20px;
     text-align: right;
   }
@@ -466,7 +506,7 @@ const quickLinks = [
 .db-links {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: $space-3;
+  gap: $space-4;
 
   @media (max-width: 750px) { grid-template-columns: repeat(2, 1fr); }
 }
@@ -474,25 +514,26 @@ const quickLinks = [
 .db-link {
   display: flex;
   align-items: center;
-  gap: $space-3;
+  gap: $space-4;
   background: $color-surface;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  padding: $space-3 $space-4;
+  border-radius: $radius-xl;
+  padding: $space-4 $space-5;
+  min-height: 76px;
   text-decoration: none;
-  transition: box-shadow $transition-fast, border-color $transition-fast, transform $transition-fast;
+  transition: box-shadow $transition-normal, border-color $transition-normal, transform $transition-normal;
 
   &:hover {
     box-shadow: $shadow-md;
-    border-color: rgb(var(--v-theme-primary));
+    border-color: $color-primary-muted;
     transform: translateY(-2px);
   }
 
   &__icon-wrap {
     flex-shrink: 0;
-    width: 38px;
-    height: 38px;
-    border-radius: $radius-md;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-lg;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -503,13 +544,14 @@ const quickLinks = [
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
   }
 
   &__title {
-    font-size: $font-size-sm;
+    font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     color: $color-text-main;
+    line-height: $line-height-tight;
   }
 
   &__desc {
@@ -520,7 +562,15 @@ const quickLinks = [
     text-overflow: ellipsis;
   }
 }
-
+// ── Section labels ────────────────────────────────────────────────────────────────────
+.db-section-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 $space-3;
+}
 // ── Skeleton animation ────────────────────────────────────────────────────────
 @keyframes db-pulse {
   0%, 100% { opacity: 1; }

@@ -15,8 +15,8 @@
 
         <div class="cal-panel__sessions">
           <div v-if="daySessions.length === 0" class="cal-panel__empty">
-            <v-icon icon="mdi-calendar-blank-outline" size="36" color="disabled" />
-            <p>Sin sesiones</p>
+            <v-icon icon="mdi-calendar-blank-outline" size="40" color="disabled" />
+            <p>Sin sesiones este día</p>
           </div>
           <div v-else class="cal-panel__list">
             <div
@@ -45,7 +45,7 @@
         </div>
 
         <div class="cal-panel__footer">
-          <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" size="small" block @click="onNewAppointmentForDay">
+          <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" size="default" block @click="onNewAppointmentForDay">
             Nueva cita
           </v-btn>
         </div>
@@ -642,36 +642,37 @@ async function confirmDelete() {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 30px);
-  padding: $space-5 $space-5;
+  padding: $space-5;
   background: $color-background;
   overflow: hidden;
 }
 
 .cal-split {
   display: flex;
-  gap: $space-4;
+  gap: $space-5;
   flex: 1;
   min-height: 0;
 }
 
 // ── Day panel ─────────────────────────────────────────────────────────────────
 .cal-panel {
-  width: 220px;
+  width: 260px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background: $color-surface;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
+  border-radius: $radius-xl;
   overflow: hidden;
-  box-shadow: $shadow-sm;
+  box-shadow: $shadow-panel;
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: $space-2 $space-3;
-    border-bottom: 1px solid $color-border;
+    padding: $space-4 $space-3;
+    background: $color-surface-raised;
+    border-bottom: 1px solid $color-divider;
     gap: $space-1;
   }
 
@@ -685,32 +686,45 @@ async function confirmDelete() {
   }
 
   &__date-label {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
     color: $color-text-main;
     text-align: center;
     text-transform: capitalize;
     line-height: 1.3;
+    letter-spacing: -0.01em;
   }
 
   &__today-btn {
-    font-size: $font-size-xs;
-    color: $color-primary;
+    font-size: 0.68rem;
+    color: $color-text-muted;
     background: transparent;
-    border: none;
+    border: 1px solid $color-border;
     cursor: pointer;
-    padding: 0;
+    padding: 1px $space-2;
+    border-radius: $radius-full;
     font-weight: $font-weight-medium;
-    text-decoration: underline;
-    line-height: 1;
+    text-decoration: none;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
 
-    &:hover { opacity: 0.75; }
+    &:hover {
+      background: $color-hover;
+      border-color: $color-primary-muted;
+      color: $color-primary;
+    }
   }
 
   &__sessions {
     flex: 1;
     overflow-y: auto;
-    padding: $space-2;
+    padding: $space-3;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.10); border-radius: 2px; }
+    &::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.18); }
   }
 
   &__empty {
@@ -723,41 +737,48 @@ async function confirmDelete() {
 
     p {
       font-size: $font-size-sm;
-      margin-top: $space-2;
+      margin-top: $space-3;
       color: $color-text-muted;
+      font-weight: $font-weight-medium;
     }
   }
 
   &__list {
     display: flex;
     flex-direction: column;
-    gap: $space-1;
+    gap: $space-2;
   }
 
   &__session {
     display: flex;
     align-items: flex-start;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border-radius: $radius-md;
+    gap: $space-3;
+    padding: $space-3;
+    border-radius: $radius-lg;
     cursor: pointer;
-    transition: background $transition-fast;
+    border: 1px solid transparent;
+    transition: background $transition-fast, border-color $transition-fast, box-shadow $transition-fast;
 
-    &:hover { background: $color-hover; }
-    &:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
+    &:hover {
+      background: $color-hover;
+      border-color: $color-border;
+      box-shadow: $shadow-xs;
+    }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
 
   &__session-dot {
     flex-shrink: 0;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    margin-top: 5px;
+    margin-top: 4px;
     background: $color-border;
+    box-shadow: 0 0 0 2px $color-surface;
 
-    &--scheduled { background: rgb(var(--v-theme-primary)); }
+    &--scheduled { background: $color-primary; }
     &--confirmed  { background: #3b82f6; }
-    &--completed  { background: #2E8B57; }
+    &--completed  { background: $color-success; }
     &--cancelled  { background: $color-text-muted; }
     &--no_show    { background: $color-warning; }
   }
@@ -767,13 +788,15 @@ async function confirmDelete() {
     flex-direction: column;
     flex: 1;
     min-width: 0;
-    gap: 1px;
+    gap: 2px;
   }
 
   &__session-time {
-    font-size: 0.7rem;
+    font-size: $font-size-xs;
     color: $color-text-muted;
     font-weight: $font-weight-medium;
+    letter-spacing: 0.015em;
+    line-height: 1.2;
   }
 
   &__session-name {
@@ -783,6 +806,8 @@ async function confirmDelete() {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
   }
 
   &__session-footer {
@@ -790,11 +815,13 @@ async function confirmDelete() {
     align-items: center;
     gap: $space-2;
     flex-wrap: wrap;
+    margin-top: 1px;
   }
 
   &__session-type {
     font-size: 0.65rem;
     color: $color-text-muted;
+    font-weight: $font-weight-medium;
   }
 
   &__session-status {
@@ -802,11 +829,11 @@ async function confirmDelete() {
     align-items: center;
     font-size: 0.65rem;
     font-weight: $font-weight-semibold;
-    padding: 1px 6px;
+    padding: 2px 7px;
     border-radius: $radius-full;
-    line-height: 1.5;
+    line-height: 1.4;
 
-    &--scheduled { background: rgba(91, 42, 134, 0.1); color: $color-primary; }
+    &--scheduled { background: rgba(91, 42, 134, 0.08); color: $color-primary; }
     &--confirmed  { background: #dbeafe; color: #1d4ed8; }
     &--completed  { background: #dcfce7; color: #166534; }
     &--cancelled  { background: $color-disabled-bg; color: $color-text-muted; }
@@ -814,8 +841,9 @@ async function confirmDelete() {
   }
 
   &__footer {
-    padding: $space-3;
-    border-top: 1px solid $color-border;
+    padding: $space-4;
+    border-top: 1px solid $color-divider;
+    background: $color-surface-raised;
   }
 }
 
@@ -828,10 +856,10 @@ async function confirmDelete() {
   flex-direction: column;
   background: $color-surface;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  padding: $space-4;
+  border-radius: $radius-xl;
+  padding: $space-4 $space-5;
   overflow: hidden;
-  box-shadow: $shadow-sm;
+  box-shadow: $shadow-panel;
 }
 
 // Responsive: stack on smaller screens
@@ -860,7 +888,7 @@ async function confirmDelete() {
     }
 
     &__session {
-      min-width: 160px;
+      min-width: 180px;
       flex-shrink: 0;
     }
 
@@ -876,11 +904,12 @@ async function confirmDelete() {
 // ── Dialog ────────────────────────────────────────────────────────────────────
 .cal-dialog {
   overflow: hidden;
+  border-radius: $radius-xl !important;
 
   &__head {
     display: flex;
     align-items: center;
-    padding: $space-3 $space-5;
+    padding: $space-4 $space-5;
     background: $color-primary-subtle;
     color: $color-primary;
 
@@ -890,19 +919,20 @@ async function confirmDelete() {
     }
 
     &--danger {
-      background: var(--cal-event-cancelled-bg);
-      color: var(--cal-event-cancelled);
+      background: $color-error-subtle;
+      color: $color-error;
     }
 
     &--success {
-      background: var(--cal-event-completed-bg);
-      color: var(--cal-event-completed);
+      background: rgba($color-success, 0.08);
+      color: $color-success;
     }
   }
 
   &__head-title {
     font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
+    font-weight: $font-weight-bold;
+    letter-spacing: -0.01em;
   }
 
   &__dates {
@@ -913,7 +943,9 @@ async function confirmDelete() {
   }
 }
 
-// ── FullCalendar overrides ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// FullCalendar overrides
+// ══════════════════════════════════════════════════════════════════════════════
 
 :deep(.fc) {
   font-family: $font-family;
@@ -922,24 +954,29 @@ async function confirmDelete() {
   height: 100%;
 }
 
-// Toolbar
+// ── Toolbar ──────────────────────────────────────────────────────────────────
+
 :deep(.fc .fc-toolbar) {
-  padding: 0 $space-1 $space-4;
+  padding: 0 0 $space-3;
+  margin-bottom: $space-3;
   gap: $space-3;
   flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid $color-divider;
 }
 
 :deep(.fc-toolbar-title) {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg !important;
+  font-weight: $font-weight-bold;
   color: $color-text-main;
   text-transform: capitalize;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
-// Buttons — ghost style with filled active state
+// ── Toolbar buttons — ghost style ────────────────────────────────────────────
+
 :deep(.fc .fc-button) {
-  background: transparent !important;
+  background: $color-surface !important;
   border: 1px solid $color-border !important;
   color: $color-text-secondary !important;
   font-weight: $font-weight-medium !important;
@@ -949,76 +986,158 @@ async function confirmDelete() {
   text-transform: none !important;
   letter-spacing: 0 !important;
   padding: 5px 14px !important;
+  height: 32px !important;
   box-shadow: none !important;
   outline: none !important;
-  transition: all $transition-fast !important;
+  transition: all $transition-normal !important;
+  line-height: 1.5 !important;
 
   &:hover:not(:disabled) {
     background: $color-hover !important;
-    border-color: rgb(var(--v-theme-primary)) !important;
-    color: rgb(var(--v-theme-primary)) !important;
+    border-color: $color-primary-muted !important;
+    color: $color-primary !important;
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(91, 42, 134, 0.15) !important;
   }
 
   &.fc-button-active {
-    background: rgb(var(--v-theme-primary)) !important;
-    border-color: rgb(var(--v-theme-primary)) !important;
+    background: $color-primary !important;
+    border-color: $color-primary !important;
     color: #fff !important;
+    box-shadow: 0 1px 3px rgba(91, 42, 134, 0.25) !important;
   }
 
   &:disabled {
-    opacity: 0.4 !important;
+    opacity: 0.35 !important;
     cursor: not-allowed !important;
   }
 }
 
-:deep(.fc .fc-button-group) {
-  gap: 6px;
+// ── Segmented control — view switcher ────────────────────────────────────────
+
+:deep(.fc-toolbar-chunk:last-child .fc-button-group) {
+  background: $color-surface-sunken;
+  border-radius: $radius-lg;
+  padding: 3px;
+  gap: 0 !important;
+  border: 1px solid $color-divider;
+
+  .fc-button {
+    border: none !important;
+    background: transparent !important;
+    color: $color-text-muted !important;
+    border-radius: $radius-md !important;
+    padding: 5px 16px !important;
+    font-weight: $font-weight-medium !important;
+    font-size: $font-size-sm !important;
+    transition: all $transition-normal !important;
+    position: relative;
+    z-index: 1;
+
+    &:hover:not(:disabled):not(.fc-button-active) {
+      background: rgba(255, 255, 255, 0.6) !important;
+      color: $color-text-secondary !important;
+      border: none !important;
+    }
+
+    &.fc-button-active {
+      background: $color-surface !important;
+      color: $color-primary !important;
+      font-weight: $font-weight-semibold !important;
+      box-shadow: $shadow-sm !important;
+      border: none !important;
+      z-index: 2;
+    }
+  }
+}
+
+// ── Nav button group (prev/next) ──────────────────────────────────────────────
+
+:deep(.fc-toolbar-chunk:first-child .fc-button-group) {
+  gap: 2px;
   box-shadow: none;
 }
 
-// Column headers
+:deep(.fc .fc-prev-button),
+:deep(.fc .fc-next-button) {
+  padding: 5px 8px !important;
+  border-radius: $radius-md !important;
+}
+
+// ── Today button ──────────────────────────────────────────────────────────────
+
+:deep(.fc .fc-today-button) {
+  font-weight: $font-weight-semibold !important;
+  border-radius: $radius-md !important;
+
+  &:not(:disabled) {
+    background: rgba($color-primary, 0.04) !important;
+    border-color: $color-primary-muted !important;
+    color: $color-primary !important;
+
+    &:hover {
+      background: $color-primary-subtle !important;
+    }
+  }
+}
+
+// ── Toggle weekends button ────────────────────────────────────────────────────
+
+:deep(.fc-toggleWeekends-button) {
+  margin-right: $space-3 !important;
+  font-size: $font-size-xs !important;
+  color: $color-text-muted !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  padding: 5px $space-3 !important;
+
+  &:hover:not(:disabled) {
+    background: $color-hover !important;
+    border-color: transparent !important;
+    color: $color-text-secondary !important;
+  }
+}
+
+// ── Column headers ───────────────────────────────────────────────────────────
+
 :deep(.fc-col-header) {
-  background: $color-background;
+  background: $cal-header-bg;
 }
 
 :deep(.fc-col-header-cell) {
   border-bottom: 2px solid $color-border !important;
 }
 
+// Today column gets a subtle primary tint + indicator bottom line
+:deep(.fc-col-header-cell.fc-day-today) {
+  background: rgba(91, 42, 134, 0.032) !important;
+  border-bottom-color: $color-primary !important;
+}
+
+// Cushion just wraps the custom dayHeaderContent — keep it clean
 :deep(.fc-col-header-cell-cushion) {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: $space-2 $space-2 !important;
   text-decoration: none !important;
-  color: $color-text-secondary;
-  font-weight: $font-weight-medium;
-  font-size: $font-size-xs;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-:deep(.fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion) {
-  color: $color-primary;
-  font-weight: $font-weight-semibold;
-}
+// ── Time axis ─────────────────────────────────────────────────────────────────
 
-// Time axis
 :deep(.fc-timegrid-axis) {
-  width: 56px !important;
+  width: 58px !important;
 }
 
 :deep(.fc-timegrid-slot-label-cushion) {
   font-size: 0.7rem !important;
-  color: $color-text-muted !important;
+  color: rgba($color-text-secondary, 0.72) !important;
   font-weight: $font-weight-medium;
   padding-right: $space-3 !important;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
 :deep(.fc-timegrid-slot) {
@@ -1027,42 +1146,56 @@ async function confirmDelete() {
 
 :deep(.fc-timegrid-slot-minor) {
   border-top-style: dashed !important;
-  border-color: $color-divider !important;
+  border-color: $cal-grid-line-minor !important;
 }
 
-// Today highlight
+// ── Today highlight ──────────────────────────────────────────────────────────
+
 :deep(.fc-day-today) {
-  background: rgba($color-primary, 0.03) !important;
+  background: $cal-today-bg !important;
 }
 
-// Now indicator
+// ── Now indicator ─────────────────────────────────────────────────────────────
+
 :deep(.fc-timegrid-now-indicator-line) {
   border-color: $color-primary !important;
   border-width: 2px !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $color-primary;
+  }
 }
 
 :deep(.fc-timegrid-now-indicator-arrow) {
-  border-top-color: $color-primary !important;
-  border-bottom-color: $color-primary !important;
+  display: none !important;
 }
 
-// Events
+// ── Events ────────────────────────────────────────────────────────────────────
+
 :deep(.fc-event) {
   border-radius: $radius-md !important;
   border: none !important;
   cursor: pointer !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
-  transition: filter $transition-fast, transform $transition-fast, box-shadow $transition-fast !important;
+  // Layered shadow for depth
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  transition: transform $transition-fast, box-shadow $transition-fast !important;
+  overflow: hidden;
 
   &:hover {
-    filter: brightness(1.07) !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13) !important;
   }
 }
 
 :deep(.fc-event-main) {
-  padding: 3px 7px !important;
+  padding: 0 !important;
   overflow: hidden;
 }
 
@@ -1082,28 +1215,46 @@ async function confirmDelete() {
   line-height: 1.4;
 }
 
-// Non-business hours
+// ── Non-business hours ───────────────────────────────────────────────────────
+
 :deep(.fc-non-business) {
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 5px,
-    rgba(0, 0, 0, 0.018) 5px,
-    rgba(0, 0, 0, 0.018) 10px
-  ) !important;
+  background: rgba(0, 0, 0, 0.016) !important;
 }
 
-// Scrollgrid
+// ── Scrollgrid ────────────────────────────────────────────────────────────────
+
 :deep(.fc-scrollgrid) {
   border: none !important;
 }
 
 :deep(.fc-scrollgrid td),
 :deep(.fc-scrollgrid th) {
-  border-color: $color-divider !important;
+  border-color: $cal-grid-line !important;
 }
 
-// Month day number
+// Slim overlay scrollbar
+:deep(.fc-scroller)::-webkit-scrollbar {
+  width: 5px;
+}
+:deep(.fc-scroller)::-webkit-scrollbar-track {
+  background: transparent;
+}
+:deep(.fc-scroller)::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.13);
+  border-radius: 3px;
+}
+:deep(.fc-scroller)::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+// Weekend columns — subtle warmth tint
+:deep(.fc-day-sat),
+:deep(.fc-day-sun) {
+  background: rgba(0, 0, 0, 0.010) !important;
+}
+
+// ── Month day number ──────────────────────────────────────────────────────────
+
 :deep(.fc-daygrid-day-number) {
   font-size: $font-size-sm;
   color: $color-text-secondary;
@@ -1122,6 +1273,7 @@ async function confirmDelete() {
 :deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
   background: $color-primary;
   color: #fff;
+  font-weight: $font-weight-semibold;
 }
 
 :deep(.fc-daygrid-more-link) {

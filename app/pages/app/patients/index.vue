@@ -21,7 +21,7 @@
       </v-btn>
     </div>
 
-    <!-- Search + filter bar -->
+    <!-- Search -->
     <div class="pt-page__toolbar">
       <v-text-field
         v-model="search"
@@ -33,6 +33,10 @@
         hide-details
         class="pt-search"
       />
+    </div>
+
+    <!-- Tabs -->
+    <div class="pt-tabs-section">
       <v-tabs v-model="tab" color="primary" density="compact" class="app-tabs">
         <v-tab value="active">
           Activos
@@ -108,12 +112,14 @@
             </div>
           </div>
 
-          <!-- Status chip -->
+          <!-- Status chip + arrow -->
           <div class="pt-card__right">
             <span class="pt-status" :class="`pt-status--${p.patientStatus}`">
               {{ STATUS_LABELS[p.patientStatus] ?? p.patientStatus }}
             </span>
-            <v-icon icon="mdi-chevron-right" size="18" class="pt-card__chevron" />
+          </div>
+          <div class="pt-card__arrow-wrap">
+            <v-icon icon="mdi-chevron-right" size="18" />
           </div>
         </div>
       </div>
@@ -195,105 +201,161 @@ onMounted(async () => {
   padding: $space-5;
   max-width: 860px;
   margin: 0 auto;
+}
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: $space-4;
-    margin-bottom: $space-5;
-  }
+// ── Page header ───────────────────────────────────────────────────────────────
+.pt-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  padding-bottom: $space-5;
+  margin-bottom: $space-5;
+  border-bottom: 1px solid $color-divider;
+}
 
-  &__title-wrap {
-    display: flex;
-    align-items: center;
-    margin-bottom: $space-1;
-  }
+.pt-page__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-bottom: $space-1;
+}
 
-  &__title {
-    font-size: $font-size-xl;
-    font-weight: $font-weight-semibold;
-    color: $color-text-main;
-    letter-spacing: -0.01em;
-  }
+.pt-page__title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-main;
+  line-height: $line-height-tight;
+  letter-spacing: -0.01em;
+}
 
-  &__subtitle {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
-  }
+.pt-page__subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+  padding-left: 36px;
+  line-height: $line-height-normal;
+}
 
-  &__toolbar {
-    display: flex;
-    flex-direction: column;
-    gap: $space-3;
-    margin-bottom: $space-4;
-  }
-
-  &__loading {
-    display: flex;
-    justify-content: center;
-    padding: $space-8 0;
-  }
-
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: $space-8 0;
-    color: $color-text-muted;
-  }
+// ── Toolbar (search) ──────────────────────────────────────────────────────────
+.pt-page__toolbar {
+  margin-bottom: $space-4;
 }
 
 .pt-search {
-  max-width: 380px;
+  // full width of container
 }
 
-// ── List ──────────────────────────────────────────────────────────────────────
+// ── Tabs section ──────────────────────────────────────────────────────────────
+.pt-tabs-section {
+  border-bottom: 2px solid $color-divider;
+  margin-bottom: $space-4;
+}
+
+:deep(.app-tabs) {
+  .v-tab {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    letter-spacing: 0.01em;
+    border-radius: $radius-md $radius-md 0 0;
+    min-width: 88px;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover:not(.v-tab--selected) {
+      background: $color-hover;
+      color: $color-text-main;
+    }
+
+    &.v-tab--selected {
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+      background: $color-primary-subtle !important;
+    }
+  }
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: $space-2;
+  border-radius: $radius-full;
+  font-size: 0.68rem;
+  font-weight: $font-weight-semibold;
+  background: rgba($color-text-muted, 0.10);
+  color: $color-text-muted;
+  transition: background $transition-fast, color $transition-fast;
+
+  &--active {
+    background: $color-primary;
+    color: #fff;
+  }
+}
+
+// ── Loading / empty ───────────────────────────────────────────────────────────
+.pt-page__loading {
+  display: flex;
+  justify-content: center;
+  padding: $space-8 0;
+}
+
+.pt-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $space-8 0;
+  gap: $space-2;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+// ── Patient list ──────────────────────────────────────────────────────────────
 .pt-list {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-3;
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
+// ── Patient card ──────────────────────────────────────────────────────────────
 .pt-card {
   display: flex;
   align-items: center;
-  gap: $space-4;
   background: $color-surface;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  padding: $space-3 $space-4;
-  cursor: pointer;
-  transition: box-shadow $transition-fast, border-color $transition-fast;
-  position: relative;
+  box-shadow: $shadow-xs;
   overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow $transition-normal, border-color $transition-normal;
+  position: relative;
 
   &:hover {
-    border-color: rgb(var(--v-theme-primary));
-    box-shadow: $shadow-md;
+    border-color: $color-primary-muted;
+    box-shadow: $shadow-sm;
   }
 
   &:focus-visible {
-    outline: 2px solid rgb(var(--v-theme-primary));
+    outline: 2px solid $color-primary;
     outline-offset: 2px;
   }
 
-  // Left accent bar
+  // Left accent bar (absolute, flush)
   &__status-bar {
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
     width: 4px;
-    border-radius: $radius-lg 0 0 $radius-lg;
-    background: $color-border;
+    border-radius: 0;
 
-    &--active    { background: #22c55e; }
-    &--inactive  { background: $color-text-muted; }
-    &--archived  { background: $color-warning; }
-    &--discharged{ background: rgb(var(--v-theme-primary)); }
+    &--active     { background: $color-success; }
+    &--inactive   { background: $color-text-muted; }
+    &--archived   { background: $color-warning; }
+    &--discharged { background: $color-primary; }
   }
 
   &__avatar {
@@ -301,19 +363,20 @@ onMounted(async () => {
     width: 40px;
     height: 40px;
     border-radius: $radius-full;
-    background: rgba(var(--v-theme-primary), 0.1);
-    color: rgb(var(--v-theme-primary));
+    background: $color-primary-subtle;
+    color: $color-primary;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    margin-left: $space-3;
+    margin-left: $space-5;   // clears the status bar
   }
 
   &__info {
     flex: 1;
     min-width: 0;
+    padding: $space-4 $space-4 $space-4 $space-3;
   }
 
   &__name {
@@ -323,11 +386,14 @@ onMounted(async () => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: $line-height-tight;
+    margin-bottom: 2px;
   }
 
   &__meta {
     display: flex;
     align-items: center;
+    gap: 3px;
     font-size: $font-size-xs;
     color: $color-text-muted;
     margin-top: 2px;
@@ -341,59 +407,40 @@ onMounted(async () => {
     align-items: center;
     gap: $space-2;
     flex-shrink: 0;
-  }
-
-  &__chevron {
-    color: $color-text-muted;
+    padding-right: $space-2;
   }
 }
 
-// ── Tab count badge ───────────────────────────────────────────────────────────
-:deep(.app-tabs) {
-  .v-tab {
-    border-radius: $radius-md $radius-md 0 0;
-    transition: background 0.15s, color 0.15s;
-
-    &.v-tab--selected {
-      background: $color-primary-muted !important;
-    }
-  }
-}
-
-.tab-count {
-  display: inline-flex;
+// ── Arrow affordance ──────────────────────────────────────────────────────────
+.pt-card__arrow-wrap {
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  margin-left: $space-2;
-  border-radius: $radius-full;
-  font-size: 0.7rem;
-  font-weight: $font-weight-semibold;
-  background: rgba($color-text-muted, 0.12);
+  padding: 0 $space-3;
   color: $color-text-muted;
-  transition: background 0.2s, color 0.2s;
+  opacity: 0.35;
+  transition: opacity $transition-fast, color $transition-fast;
+}
 
-  &--active {
-    background: $color-primary;
-    color: #fff;
-  }
+.pt-card:hover .pt-card__arrow-wrap {
+  opacity: 0.75;
+  color: $color-primary;
 }
 
 // ── Status pill ───────────────────────────────────────────────────────────────
 .pt-status {
   display: inline-block;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: $font-weight-semibold;
   padding: 2px 10px;
   border-radius: $radius-full;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.5;
 
-  &--active    { background: rgba(#22c55e, 0.12); color: #15803d; }
-  &--inactive  { background: rgba($color-text-muted, 0.12); color: $color-text-secondary; }
-  &--archived  { background: rgba($color-warning, 0.12); color: $color-warning; }
-  &--discharged{ background: rgba(var(--v-theme-primary), 0.1); color: rgb(var(--v-theme-primary)); }
+  &--active     { background: $color-success-subtle;  color: $color-success; }
+  &--inactive   { background: rgba($color-text-muted, 0.10); color: $color-text-secondary; }
+  &--archived   { background: $color-warning-subtle;  color: $color-warning; }
+  &--discharged { background: $color-primary-subtle;  color: $color-primary; }
 }
 </style>

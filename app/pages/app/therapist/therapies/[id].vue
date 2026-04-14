@@ -1,7 +1,7 @@
 <template>
   <div class="td-page">
     <div class="td-page__top-bar">
-      <v-btn variant="text" prepend-icon="mdi-arrow-left" @click="$router.back()">
+      <v-btn variant="text" size="small" prepend-icon="mdi-arrow-left" class="td-back-btn" @click="$router.back()">
         Terapias
       </v-btn>
       <v-menu v-if="process" location="bottom end">
@@ -85,24 +85,27 @@
     <v-alert v-else-if="error" type="error" class="mb-4">{{ error }}</v-alert>
 
     <template v-else-if="process">
-      <!-- Cabecera del proceso -->
-      <div class="td-header">
-        <div class="td-header__top">
-          <v-chip :color="statusColor(process.processStatus)" size="small" class="mr-2">
-            {{ statusLabel(process.processStatus) }}
-          </v-chip>
-          <span v-if="process.openedAt" class="td-header__date">
-            Desde {{ formatDate(process.openedAt) }}
-          </span>
-          <span v-if="process.closedAt" class="td-header__date">
-            &nbsp;· Cerrado {{ formatDate(process.closedAt) }}
-          </span>
+      <!-- Ficha de identidad del proceso -->
+      <div class="td-identity">
+        <div class="td-identity__meta">
+          <div v-if="patientName" class="td-identity__patient">
+            <v-icon icon="mdi-account-circle-outline" size="15" class="mr-1" />
+            {{ patientName }}
+          </div>
+          <div class="td-identity__meta-right">
+            <span v-if="process.openedAt" class="td-identity__date">
+              Desde {{ formatDate(process.openedAt) }}
+            </span>
+            <span v-if="process.closedAt" class="td-identity__date">
+              · Cerrado {{ formatDate(process.closedAt) }}
+            </span>
+            <span class="td-status-badge" :class="'td-status-badge--' + process.processStatus">
+              <span class="td-status-badge__dot" />
+              {{ statusLabel(process.processStatus) }}
+            </span>
+          </div>
         </div>
-        <div v-if="patientName" class="td-header__patient">
-          <v-icon icon="mdi-account-outline" size="16" class="mr-1" />
-          {{ patientName }}
-        </div>
-        <h1 class="td-header__reason">{{ process.reasonForConsultation }}</h1>
+        <h4 class="td-identity__title">{{ process.reasonForConsultation }}</h4>
 
         <!-- ── Tags ────────────────────────────────────────────────────────── -->
         <div class="td-tags">
@@ -206,19 +209,19 @@
       </div>
 
       <!-- Observaciones iniciales -->
-      <div v-if="process.initialObservations" class="td-card mb-5">
-        <div class="td-card__label">Observaciones iniciales</div>
-        <p class="td-card__text">{{ process.initialObservations }}</p>
+      <div v-if="process.initialObservations" class="td-observations">
+        <div class="td-observations__label">Observaciones iniciales</div>
+        <p class="td-observations__text">{{ process.initialObservations }}</p>
       </div>
 
       <!-- Sección de sesiones -->
       <div class="td-section">
         <div class="td-section__header">
-          <v-icon icon="mdi-calendar-check-outline" size="20" color="primary" class="mr-2" />
-          <span class="td-section__title">Sesiones</span>
-          <v-chip size="x-small" color="primary" variant="tonal" class="ml-2">
-            {{ sessions.length }}
-          </v-chip>
+          <div class="td-section__header-left">
+            <v-icon icon="mdi-calendar-check-outline" size="18" color="primary" class="mr-2" />
+            <span class="td-section__title">Sesiones</span>
+          </div>
+          <span class="td-section__count">{{ sessions.length }}</span>
         </div>
 
         <div v-if="sessions.length === 0" class="td-empty">
@@ -228,12 +231,12 @@
 
         <template v-else>
           <!-- Próximas -->
-          <div class="td-subsection-label">
-            <v-icon icon="mdi-calendar-arrow-right" size="15" class="mr-1" />
-            Próximas
-            <v-chip size="x-small" variant="tonal" color="primary" class="ml-1">{{ upcomingSessions.length }}</v-chip>
+          <div class="td-subsection-label td-subsection-label--upcoming">
+            <span class="td-subsection-label__text">Próximas</span>
+            <span class="td-subsection-label__count">{{ upcomingSessions.length }}</span>
           </div>
           <div v-if="upcomingSessions.length === 0" class="td-empty td-empty--sm">
+            <v-icon icon="mdi-calendar-remove-outline" size="18" color="disabled" />
             <p class="td-empty__text">Sin sesiones próximas</p>
           </div>
           <div v-else class="td-sessions">
@@ -243,6 +246,7 @@
               :to="`/app/therapist/sessions/${session.id}`"
               class="td-session td-session--link"
             >
+              <div class="td-session__bar" :class="'td-session__bar--' + session.appointmentStatus" />
               <div class="td-session__date-block">
                 <span class="td-session__day">{{ sessionDay(session.startAt) }}</span>
                 <span class="td-session__month">{{ sessionMonth(session.startAt) }}</span>
@@ -250,7 +254,7 @@
               <div class="td-session__body">
                 <div class="td-session__time">
                   {{ sessionTime(session.startAt) }} – {{ sessionTime(session.endAt) }}
-                  <span class="td-session__duration">({{ sessionDuration(session.startAt, session.endAt) }})</span>
+                  <span class="td-session__duration">{{ sessionDuration(session.startAt, session.endAt) }}</span>
                 </div>
                 <div class="td-session__type">
                   <v-icon :icon="typeIcon(session.appointmentType)" size="13" class="mr-1" />
@@ -258,20 +262,20 @@
                   <span v-if="session.locationText" class="td-session__location">· {{ session.locationText }}</span>
                 </div>
               </div>
-              <v-chip :color="apptStatusColor(session.appointmentStatus)" size="x-small" class="td-session__status">
+              <span class="td-appt-badge" :class="'td-appt-badge--' + session.appointmentStatus">
                 {{ apptStatusLabel(session.appointmentStatus) }}
-              </v-chip>
+              </span>
               <v-icon icon="mdi-chevron-right" size="16" class="td-session__chevron" />
             </NuxtLink>
           </div>
 
           <!-- Pasadas -->
-          <div class="td-subsection-label mt-4">
-            <v-icon icon="mdi-history" size="15" class="mr-1" />
-            Pasadas
-            <v-chip size="x-small" variant="tonal" class="ml-1">{{ pastSessions.length }}</v-chip>
+          <div class="td-subsection-label td-subsection-label--past">
+            <span class="td-subsection-label__text">Pasadas</span>
+            <span class="td-subsection-label__count">{{ pastSessions.length }}</span>
           </div>
           <div v-if="pastSessions.length === 0" class="td-empty td-empty--sm">
+            <v-icon icon="mdi-history" size="18" color="disabled" />
             <p class="td-empty__text">Sin sesiones anteriores</p>
           </div>
           <div v-else class="td-sessions">
@@ -281,6 +285,7 @@
               :to="`/app/therapist/sessions/${session.id}`"
               class="td-session td-session--link"
             >
+              <div class="td-session__bar" :class="'td-session__bar--' + session.appointmentStatus" />
               <div class="td-session__date-block">
                 <span class="td-session__day">{{ sessionDay(session.startAt) }}</span>
                 <span class="td-session__month">{{ sessionMonth(session.startAt) }}</span>
@@ -288,7 +293,7 @@
               <div class="td-session__body">
                 <div class="td-session__time">
                   {{ sessionTime(session.startAt) }} – {{ sessionTime(session.endAt) }}
-                  <span class="td-session__duration">({{ sessionDuration(session.startAt, session.endAt) }})</span>
+                  <span class="td-session__duration">{{ sessionDuration(session.startAt, session.endAt) }}</span>
                 </div>
                 <div class="td-session__type">
                   <v-icon :icon="typeIcon(session.appointmentType)" size="13" class="mr-1" />
@@ -296,9 +301,9 @@
                   <span v-if="session.locationText" class="td-session__location">· {{ session.locationText }}</span>
                 </div>
               </div>
-              <v-chip :color="apptStatusColor(session.appointmentStatus)" size="x-small" class="td-session__status">
+              <span class="td-appt-badge" :class="'td-appt-badge--' + session.appointmentStatus">
                 {{ apptStatusLabel(session.appointmentStatus) }}
-              </v-chip>
+              </span>
               <v-icon icon="mdi-chevron-right" size="16" class="td-session__chevron" />
             </NuxtLink>
           </div>
@@ -610,17 +615,27 @@ onMounted(async () => {
 <style scoped lang="scss">
 @use '~/assets/styles/tokens' as *;
 
+// ── Page wrapper ──────────────────────────────────────────────────────────────
 .td-page {
-  padding: $space-5;
-  max-width: 760px;
+  padding: $space-4 $space-5 $space-7;
+  max-width: 780px;
   margin: 0 auto;
 
   &__top-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: $space-4;
+    padding-bottom: $space-4;
+    margin-bottom: $space-5;
+    border-bottom: 1px solid $color-divider;
   }
+}
+
+.td-back-btn {
+  font-size: $font-size-sm !important;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  letter-spacing: 0;
 }
 
 .td-action--danger :deep(.v-list-item__prepend .v-icon),
@@ -634,44 +649,108 @@ onMounted(async () => {
   padding: $space-7 0;
 }
 
-// ── Process header ──────────────────────────────────────────────────────────────
-.td-header {
+// ── Process identity card ─────────────────────────────────────────────────────
+.td-identity {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+  padding: $space-5 $space-6;
   margin-bottom: $space-5;
 
-  &__top {
+  &__meta {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: $space-1;
-    margin-bottom: $space-2;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: $space-3;
   }
 
-  &__reason {
-    font-size: $font-size-2xl;
-    font-weight: $font-weight-bold;
-    color: $color-text-main;
-    line-height: 1.2;
-    margin: 0 0 $space-2;
-  }
-
-  &__patient {
+  &__meta-right {
     display: flex;
     align-items: center;
-    font-size: $font-size-base;
-    font-weight: $font-weight-medium;
-    color: $color-text-secondary;
-    margin-bottom: $space-1;
+    gap: $space-2;
+    flex-shrink: 0;
   }
 
   &__date {
     font-size: $font-size-sm;
     color: $color-text-muted;
+    line-height: $line-height-normal;
+    white-space: nowrap;
   }
 
-  &__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $space-1;
+  &__patient {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-main;
+    line-height: $line-height-tight;
+    letter-spacing: -0.01em;
+    margin: 0 0 $space-4;
+  }
+}
+
+// ── Process status badge ──────────────────────────────────────────────────────
+.td-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.03em;
+  padding: 3px 10px 3px 8px;
+  border-radius: $radius-full;
+
+  &__dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &--active {
+    background: color-mix(in srgb, #{$color-success} 12%, transparent);
+    color: $color-success;
+    border: 1px solid color-mix(in srgb, #{$color-success} 28%, transparent);
+  }
+  &--draft {
+    background: color-mix(in srgb, #{$color-info} 12%, transparent);
+    color: $color-info;
+    border: 1px solid color-mix(in srgb, #{$color-info} 28%, transparent);
+  }
+  &--paused {
+    background: color-mix(in srgb, #{$color-warning} 12%, transparent);
+    color: $color-warning;
+    border: 1px solid color-mix(in srgb, #{$color-warning} 28%, transparent);
+  }
+  &--closed {
+    background: $color-disabled-bg;
+    color: $color-text-muted;
+    border: 1px solid $color-border;
+  }
+  &--disabled {
+    background: color-mix(in srgb, #{$color-error} 10%, transparent);
+    color: $color-error;
+    border: 1px solid color-mix(in srgb, #{$color-error} 22%, transparent);
+  }
+  &--archived {
+    background: $color-disabled-bg;
+    color: $color-text-muted;
+    border: 1px solid $color-border;
   }
 }
 
@@ -681,7 +760,6 @@ onMounted(async () => {
   align-items: center;
   flex-wrap: wrap;
   gap: $space-2;
-  margin-top: $space-2;
 
   &__list {
     display: flex;
@@ -701,16 +779,17 @@ onMounted(async () => {
     border: 1.5px dashed $color-border;
     background: transparent;
     cursor: pointer;
-    transition: border-color $transition-fast, color $transition-fast;
+    transition: border-color $transition-fast, color $transition-fast, background $transition-fast;
     outline: none;
 
     &:hover {
-      border-color: rgb(var(--v-theme-primary));
-      color: rgb(var(--v-theme-primary));
+      border-color: $color-primary;
+      color: $color-primary;
+      background: $color-primary-subtle;
     }
 
     &:focus-visible {
-      outline: 2px solid rgb(var(--v-theme-primary));
+      outline: 2px solid $color-primary;
       outline-offset: 2px;
     }
   }
@@ -722,11 +801,11 @@ onMounted(async () => {
   gap: 4px;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  padding: 3px 8px 3px 10px;
+  padding: 4px 8px 4px 10px;
   border-radius: $radius-full;
-  background: color-mix(in srgb, var(--tag-color) 14%, transparent);
+  background: color-mix(in srgb, var(--tag-color) 13%, transparent);
   color: var(--tag-color);
-  border: 1px solid color-mix(in srgb, var(--tag-color) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color) 28%, transparent);
   letter-spacing: 0.02em;
 
   &__remove {
@@ -740,13 +819,13 @@ onMounted(async () => {
     background: transparent;
     color: inherit;
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.65;
     padding: 0;
     flex-shrink: 0;
     transition: opacity $transition-fast, background $transition-fast;
 
     &:hover { opacity: 1; background: color-mix(in srgb, var(--tag-color) 20%, transparent); }
-    &:disabled { cursor: default; opacity: 0.5; }
+    &:disabled { cursor: default; opacity: 0.45; }
   }
 }
 
@@ -796,7 +875,6 @@ onMounted(async () => {
     transition: background $transition-fast;
 
     &:hover { background: rgba(var(--v-theme-primary), 0.06); }
-
     &--applied { background: rgba(var(--v-theme-primary), 0.04); }
     &--loading { opacity: 0.7; pointer-events: none; }
   }
@@ -816,12 +894,14 @@ onMounted(async () => {
   }
 }
 
-// ── Observations card ───────────────────────────────────────────────────────────
-.td-card {
+// ── Initial observations block ────────────────────────────────────────────────
+.td-observations {
   background: $color-surface;
   border: 1px solid $color-border;
+  border-left: 3px solid $color-primary-muted;
   border-radius: $radius-lg;
   padding: $space-4 $space-5;
+  margin-bottom: $space-5;
 
   &__label {
     font-size: $font-size-xs;
@@ -835,33 +915,92 @@ onMounted(async () => {
   &__text {
     font-size: $font-size-base;
     color: $color-text-main;
-    line-height: 1.6;
+    line-height: 1.65;
     margin: 0;
     white-space: pre-wrap;
   }
 }
 
-// ── Sessions section ────────────────────────────────────────────────────────────
+// ── Sessions section ──────────────────────────────────────────────────────────
 .td-section {
   &__header {
     display: flex;
     align-items: center;
-    margin-bottom: $space-3;
+    justify-content: space-between;
+    padding-bottom: $space-3;
+    margin-bottom: $space-4;
+    border-bottom: 1.5px solid $color-divider;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
   }
 
   &__title {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
     color: $color-text-main;
+    letter-spacing: -0.01em;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 $space-2;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    background: $color-primary-subtle;
+    color: $color-primary;
+    border-radius: $radius-full;
   }
 }
 
-.td-loading-sm {
+// ── Subsection labels ─────────────────────────────────────────────────────────
+.td-subsection-label {
   display: flex;
-  justify-content: center;
-  padding: $space-4 0;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-5 0 $space-3;
+  padding-left: $space-3;
+  border-left: 3px solid transparent;
+
+  &--upcoming { border-left-color: $color-primary; }
+  &--past     { border-left-color: $color-border; }
+
+  &__text {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-secondary;
+    letter-spacing: 0.01em;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    border-radius: $radius-full;
+  }
 }
 
+.td-subsection-label--upcoming .td-subsection-label__count {
+  background: $color-primary-subtle;
+  color: $color-primary;
+}
+.td-subsection-label--past .td-subsection-label__count {
+  background: $color-disabled-bg;
+  color: $color-text-muted;
+}
+
+// ── Empty states ──────────────────────────────────────────────────────────────
 .td-empty {
   display: flex;
   flex-direction: column;
@@ -875,14 +1014,29 @@ onMounted(async () => {
     font-size: $font-size-sm;
     color: $color-text-muted;
   }
+
+  &--sm {
+    flex-direction: row;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    border: none;
+    background: $color-disabled-bg;
+    border-radius: $radius-md;
+
+    .td-empty__text {
+      margin-top: 0;
+    }
+  }
 }
 
+// ── Sessions list ─────────────────────────────────────────────────────────────
 .td-sessions {
   display: flex;
   flex-direction: column;
   gap: $space-2;
 }
 
+// ── Session card ──────────────────────────────────────────────────────────────
 .td-session {
   display: flex;
   align-items: center;
@@ -890,43 +1044,51 @@ onMounted(async () => {
   background: $color-surface;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  padding: $space-3 $space-4;
+  overflow: hidden;
+  padding: $space-3 $space-4 $space-3 0;
 
-  &--clickable {
+  &--link {
+    text-decoration: none;
+    color: inherit;
     cursor: pointer;
-    transition: border-color $transition-fast, box-shadow $transition-fast;
+    transition: border-color $transition-normal, box-shadow $transition-normal, transform $transition-fast;
 
     &:hover {
-      border-color: rgb(var(--v-theme-primary));
+      border-color: $color-primary-muted;
       box-shadow: $shadow-sm;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: none;
     }
 
     &:focus-visible {
-      outline: 2px solid rgb(var(--v-theme-primary));
+      outline: 2px solid $color-primary;
       outline-offset: 2px;
     }
   }
 
-  &--link {
-    display: flex;
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    transition: border-color $transition-fast, box-shadow $transition-fast;
+  &__bar {
+    flex-shrink: 0;
+    width: 4px;
+    align-self: stretch;
 
-    &:hover {
-      border-color: rgb(var(--v-theme-primary));
-      box-shadow: $shadow-sm;
-    }
+    &--scheduled { background: $color-info; }
+    &--confirmed { background: $color-primary; }
+    &--completed { background: $color-success; }
+    &--cancelled { background: $color-error; }
+    &--no_show   { background: $color-warning; }
   }
 
   &__date-block {
     flex-shrink: 0;
-    width: 40px;
+    width: 48px;
     text-align: center;
     background: $color-primary-subtle;
     border-radius: $radius-md;
-    padding: $space-1;
+    padding: $space-2 $space-1;
   }
 
   &__day {
@@ -934,16 +1096,17 @@ onMounted(async () => {
     font-size: $font-size-lg;
     font-weight: $font-weight-bold;
     color: $color-primary;
-    line-height: 1;
+    line-height: 1.1;
   }
 
   &__month {
     display: block;
     font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-semibold;
     color: $color-primary;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    margin-top: 1px;
   }
 
   &__body {
@@ -952,62 +1115,75 @@ onMounted(async () => {
   }
 
   &__time {
+    display: flex;
+    align-items: baseline;
+    gap: $space-2;
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     color: $color-text-main;
+    line-height: $line-height-tight;
   }
 
   &__duration {
     font-size: $font-size-sm;
     font-weight: $font-weight-regular;
     color: $color-text-muted;
-    margin-left: $space-1;
   }
 
   &__type {
     display: flex;
     align-items: center;
-    margin-top: 2px;
+    margin-top: 3px;
     font-size: $font-size-sm;
-    color: $color-text-muted;
+    color: $color-text-secondary;
   }
 
   &__location {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  &__status {
-    flex-shrink: 0;
+    color: $color-text-muted;
   }
 
   &__chevron {
     flex-shrink: 0;
     color: $color-text-muted;
+    opacity: 0.7;
   }
 }
 
-.td-subsection-label {
-  display: flex;
+// ── Appointment status badge ──────────────────────────────────────────────────
+.td-appt-badge {
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $color-text-muted;
-  margin-bottom: $space-2;
-}
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: $radius-full;
+  white-space: nowrap;
 
-.td-empty--sm {
-  padding: $space-3 0;
-  border: none;
-
-  .td-empty__text {
-    margin-top: 0;
+  &--scheduled {
+    background: color-mix(in srgb, #{$color-info} 12%, transparent);
+    color: $color-info;
+  }
+  &--confirmed {
+    background: $color-primary-subtle;
+    color: $color-primary;
+  }
+  &--completed {
+    background: color-mix(in srgb, #{$color-success} 12%, transparent);
+    color: $color-success;
+  }
+  &--cancelled {
+    background: color-mix(in srgb, #{$color-error} 10%, transparent);
+    color: $color-error;
+  }
+  &--no_show {
+    background: color-mix(in srgb, #{$color-warning} 12%, transparent);
+    color: $color-warning;
   }
 }
-
-
 </style>
 

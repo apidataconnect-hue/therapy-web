@@ -216,6 +216,15 @@ const calendarOptions = ref({
   editable: props.editable,
   selectable: true,
   eventContent: renderEventContent,
+  dayHeaderContent: (arg: any) => {
+    const d       = arg.date
+    const dayAbbr = d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '').toUpperCase()
+    const dayNum  = String(d.getDate())
+    return h('div', { class: ['cw-day-header', arg.isToday ? 'cw-day-header--today' : ''] }, [
+      h('span', { class: 'cw-day-header__wday' }, dayAbbr),
+      h('span', { class: 'cw-day-header__num' },  dayNum),
+    ])
+  },
   eventClassNames: (arg: any) => {
     const end = arg.event.end ?? arg.event.start
     const status = arg.event.extendedProps?.status
@@ -284,9 +293,65 @@ watch(() => props.showWeekends, (val) => {
 </style>
 
 <style>
+/* ══════════════════════════════════════════════════════════════════════════════
+   TherapistCalendar — global event & tooltip styles
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Day header — Google Calendar inspired split layout ── */
+.cw-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 140ms ease;
+}
+
+.cw-day-header:not(.cw-day-header--today):hover .cw-day-header__num {
+  background: #F0EAF9;
+}
+
+.cw-day-header__wday {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #9588A8;
+  line-height: 1;
+}
+
+.cw-day-header__num {
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1;
+  color: #5A4E70;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  letter-spacing: -0.02em;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.cw-day-header--today .cw-day-header__wday {
+  color: #5B2A86;
+  font-weight: 800;
+}
+
+.cw-day-header--today .cw-day-header__num {
+  background: #5B2A86;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(91, 42, 134, 0.3);
+}
+
 .fc-timegrid-slot-minor {
   border-top-style: dashed !important;
-  border-top-color: rgba(0,0,0,0.1) !important;
 }
 
 /* Align time label text to the grid line */
@@ -313,7 +378,7 @@ watch(() => props.showWeekends, (val) => {
   padding: 0 !important;
 }
 
-/* Soften event card background */
+/* ── Event card base ── */
 .fc-timegrid-event .fc-event-main,
 .fc-timegrid-event {
   border: none !important;
@@ -321,60 +386,31 @@ watch(() => props.showWeekends, (val) => {
 }
 
 .fc-timegrid-event {
-  opacity: 0.88;
+  opacity: 0.95;
+  border-radius: 8px !important;
 }
 
 .fc-event--past {
-  opacity: 0.4 !important;
+  opacity: 0.42 !important;
+  filter: grayscale(28%) !important;
 }
 
 .fc-event-inner--cancelled .fc-event-inner__title {
   text-decoration: line-through;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
-.fc-event-inner__cancelled {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.64rem;
-  font-weight: 600;
-  opacity: 0.9;
-  line-height: 1;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 3px;
-  padding: 1px 5px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.fc-event-inner__status {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.80rem;
-  font-weight: 600;
-  line-height: 1;
-  border-radius: 3px;
-  padding: 6px 10px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.22);
-  margin-left: 3px;
-}
-
-.fc-event-inner__status--scheduled  { background: rgba(255, 255, 255, 0.20); }
-.fc-event-inner__status--confirmed  { background: rgba(59,  130, 246, 0.30); }
-.fc-event-inner__status--completed  { background: rgba(46,  139, 87,  0.30); }
-.fc-event-inner__status--cancelled  { background: rgba(255, 255, 255, 0.18); opacity: 0.85; }
-.fc-event-inner__status--no_show    { background: rgba(199, 123, 44,  0.35); }
-
+/* ── Event inner layout ── */
 .fc-event-inner {
   display: flex;
   flex-direction: column;
-  padding: 4px 7px 5px;
+  padding: 6px 10px 8px;
   overflow: hidden;
   height: 100%;
-  gap: 18px;
+  gap: 1px;
+  border-left: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 0 8px 8px 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 /* ── Row 1: time + session link ── */
@@ -387,39 +423,45 @@ watch(() => props.showWeekends, (val) => {
 }
 
 .fc-event-inner__time {
-  font-size: 1rem;
-  opacity: 0.82;
-  font-weight: 600;
+  font-size: 0.675rem;
+  opacity: 0.76;
+  font-weight: 500;
   line-height: 1.3;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
+/* ── Action links ── */
 .fc-event-inner__link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   color: inherit;
-  opacity: 0.85;
-  background: rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  background: rgba(255, 255, 255, 0.15);
   text-decoration: none;
   line-height: 1;
-  transition: opacity 150ms ease, background 150ms ease;
+  transition: opacity 180ms ease, background 180ms ease;
   cursor: pointer;
 }
 
+.fc-event-inner:hover .fc-event-inner__link {
+  opacity: 0.75;
+}
+
 .fc-event-inner__link-icon {
-  font-size: 25px;
+  font-size: 16px;
   line-height: 1;
 }
 
 .fc-event-inner__link:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.45);
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .fc-event-inner__link--info {
@@ -431,20 +473,21 @@ watch(() => props.showWeekends, (val) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3px;
+  gap: 4px;
   flex-shrink: 0;
   min-width: 0;
 }
 
 .fc-event-inner__title {
-  font-size: 0.875rem;
+  font-size: 0.83rem;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.28;
   flex: 1;
   min-width: 0;
+  letter-spacing: -0.015em;
 }
 
 /* ── Row 3: appointment type label ── */
@@ -453,13 +496,14 @@ watch(() => props.showWeekends, (val) => {
 }
 
 .fc-event-inner__type-label {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 500;
-  opacity: 0.8;
+  opacity: 0.80;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
+  line-height: 1.4;
 }
 
 /* ── Row 4: footer — status ── */
@@ -469,44 +513,84 @@ watch(() => props.showWeekends, (val) => {
   justify-content: flex-end;
   gap: 4px;
   margin-top: auto;
-  padding-top: 2px;
+  padding-top: 3px;
 }
 
 .fc-event-inner__type-icon {
-  opacity: 0.75;
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
-/* ── Event hover tooltip ─────────────────────────────────────────────────── */
+/* ── Status badges ── */
+.fc-event-inner__status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.575rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 100px;
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.fc-event-inner__status--scheduled  { background: rgba(255, 255, 255, 0.18); }
+.fc-event-inner__status--confirmed  { background: rgba(59,  130, 246, 0.30); }
+.fc-event-inner__status--completed  { background: rgba(46,  139, 87,  0.30); }
+.fc-event-inner__status--cancelled  { background: rgba(255, 255, 255, 0.10); opacity: 0.60; }
+.fc-event-inner__status--no_show    { background: rgba(199, 123, 44,  0.30); }
+
+.fc-event-inner__cancelled {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  opacity: 0.85;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Tooltip
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 .cal-tooltip {
   position: fixed;
   z-index: 9999;
   pointer-events: none;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 12px 14px;
-  min-width: 210px;
-  max-width: 270px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 6px rgba(0, 0, 0, 0.04);
+  padding: 14px 16px;
+  min-width: 220px;
+  max-width: 280px;
   font-size: 13px;
   color: #1c1c2e;
-  line-height: 1.4;
+  line-height: 1.45;
+  backdrop-filter: blur(8px);
 }
 
 .cal-tooltip__name {
-  font-weight: 600;
-  font-size: 13.5px;
+  font-weight: 700;
+  font-size: 14px;
   color: #1c1c2e;
   margin: 0 0 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .cal-tooltip__sep {
   border: none;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   margin: 8px 0;
 }
 
@@ -514,15 +598,15 @@ watch(() => props.showWeekends, (val) => {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 10px;
-  line-height: 1.65;
+  gap: 12px;
+  line-height: 1.7;
 }
 
 .cal-tooltip__label {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: #9ca3af;
   flex-shrink: 0;
 }
@@ -531,13 +615,14 @@ watch(() => props.showWeekends, (val) => {
   font-size: 12.5px;
   color: #374151;
   text-align: right;
+  font-weight: 500;
 }
 
-.cal-tooltip__status--scheduled { color: var(--cal-event-scheduled); font-weight: 500; }
-.cal-tooltip__status--confirmed  { color: var(--cal-event-scheduled); font-weight: 500; }
-.cal-tooltip__status--completed  { color: var(--cal-event-completed); font-weight: 500; }
-.cal-tooltip__status--cancelled  { color: var(--cal-event-cancelled); font-weight: 500; }
-.cal-tooltip__status--no_show    { color: #d97706; font-weight: 500; }
+.cal-tooltip__status--scheduled { color: #5B2A86; font-weight: 600; }
+.cal-tooltip__status--confirmed  { color: #5B2A86; font-weight: 600; }
+.cal-tooltip__status--completed  { color: #166534; font-weight: 600; }
+.cal-tooltip__status--cancelled  { color: #9588A8; font-weight: 600; }
+.cal-tooltip__status--no_show    { color: #d97706; font-weight: 600; }
 
 .cal-tooltip__notes {
   margin: 0;

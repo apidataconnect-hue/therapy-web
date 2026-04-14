@@ -135,26 +135,28 @@ async function logout() {
 
 .nav-drawer {
   background: $color-surface !important;
-  border-right: 1px solid $color-border !important;
+  border-right: 1px solid $color-divider !important;
+  box-shadow: 1px 0 8px rgba(26, 10, 46, 0.03) !important;
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
-  padding: 14px $space-3;
-  gap: $space-2;
+  padding: $space-4 $space-3 $space-4 $space-4;
+  gap: $space-3;
   min-height: 64px;
 }
 
 .nav-brand__logo {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  background: $color-primary;
-  border-radius: $radius-md;
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(91, 42, 134, 0.2);
 }
 
 .nav-brand__text {
@@ -164,60 +166,84 @@ async function logout() {
 
 .nav-brand__name {
   font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-main;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
 .nav-brand__toggle {
   color: $color-text-muted !important;
   margin-left: auto;
+  opacity: 0.6;
+  transition: opacity $transition-fast;
+
+  &:hover { opacity: 1; }
 }
 
 .nav-divider {
   border-color: $color-divider !important;
-  margin: 0 $space-3;
+  margin: $space-1 $space-4;
+  opacity: 0.7;
 }
 
 .nav-list {
-  padding: $space-2 $space-1 !important;
+  padding: $space-2 $space-3 !important;
 }
 
 .nav-section-label {
-  font-size: $font-size-xs;
+  font-size: 0.65rem;
   font-weight: $font-weight-semibold;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $color-text-muted;
-  padding: $space-3 $space-3 $space-1;
+  padding: $space-4 $space-3 $space-2;
 }
 
 :deep(.nav-item) {
   border-radius: $radius-md !important;
   color: $color-text-secondary !important;
-  margin: 1px 0;
-  transition: background $transition-fast, color $transition-fast;
+  margin: 2px 0;
+  padding: 0 $space-3 !important;
+  min-height: 40px !important;
+  transition: background $transition-normal, color $transition-fast;
 
   &:hover {
     background: $color-hover !important;
     color: $color-text-main !important;
 
-    .v-icon { opacity: 1; }
+    .v-icon { opacity: 0.9; }
   }
 
   .v-list-item-title {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
+    letter-spacing: -0.005em;
   }
 
-  .v-icon { opacity: 0.65; }
+  .v-icon { opacity: 0.5; transition: opacity $transition-fast, color $transition-fast; }
 }
 
 :deep(.nav-item--active) {
   background: $color-primary-subtle !important;
   color: $color-primary !important;
-  box-shadow: inset 3px 0 0 $color-primary;
+  font-weight: $font-weight-semibold;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 0 $radius-sm $radius-sm 0;
+    background: $color-primary;
+  }
+
+  .v-list-item-title {
+    font-weight: $font-weight-semibold;
+  }
 
   .v-icon { opacity: 1; color: $color-primary !important; }
 }

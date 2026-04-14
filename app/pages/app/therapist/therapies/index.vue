@@ -11,7 +11,7 @@
       </div>
       <div class="tq-page__header-actions">
         <v-btn
-          variant="tonal"
+          variant="outlined"
           color="primary"
           prepend-icon="mdi-tag-outline"
           size="small"
@@ -38,7 +38,7 @@
         class="tq-search"
       />
       <div v-if="tagStore.activeTags.length > 0" class="tq-tag-filter">
-        <span class="tq-tag-filter__label">Filtrar:</span>
+        <span class="tq-tag-filter__label">Filtrar</span>
         <button
           v-for="tag in tagStore.activeTags"
           :key="tag.id"
@@ -62,7 +62,8 @@
     </div>
 
     <!-- Tabs -->
-    <v-tabs v-model="tab" class="app-tabs mb-4" color="primary" density="compact">
+    <div class="tq-tabs-section">
+    <v-tabs v-model="tab" class="app-tabs" color="primary" density="compact">
       <v-tab value="active">
         Activos
         <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'active' }">{{ counts.active }}</span>
@@ -80,6 +81,7 @@
         <span v-if="!loading" class="tab-count" :class="{ 'tab-count--active': tab === 'archived' }">{{ counts.archived }}</span>
       </v-tab>
     </v-tabs>
+    </div>
 
     <!-- Loading -->
     <div v-if="loading" class="tq-page__loading">
@@ -118,7 +120,7 @@
               </span>
               <span v-else-if="tab === 'active'" class="tq-card__no-appt">Sin cita programada</span>
               <span v-if="proc.openedAt" class="tq-card__date">
-                Desde {{ formatDate(proc.openedAt) }}
+                <v-icon icon="mdi-calendar-outline" size="12" />Desde {{ formatDate(proc.openedAt) }}
               </span>
               <span v-if="proc.closedAt" class="tq-card__date tq-card__date--closed">
                 · Cerrado {{ formatDate(proc.closedAt) }}
@@ -136,7 +138,9 @@
             </div>
           </div>
 
-          <v-icon icon="mdi-chevron-right" size="20" class="tq-card__arrow" />
+          <div class="tq-card__arrow-wrap">
+            <v-icon icon="mdi-chevron-right" size="18" />
+          </div>
         </div>
       </div>
     </template>
@@ -325,79 +329,93 @@ onMounted(async () => {
 <style scoped lang="scss">
 @use '~/assets/styles/tokens' as *;
 
+// ── Page shell ────────────────────────────────────────────────────────────────
 .tq-page {
   padding: $space-5;
-  max-width: 720px;
+  max-width: 860px;
   margin: 0 auto;
-
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: $space-4;
-  }
-
-  &__header-actions {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    flex-shrink: 0;
-  }
-
-  &__title-wrap {
-    display: flex;
-    align-items: center;
-    margin-bottom: $space-1;
-  }
-
-  &__title {
-    font-size: $font-size-xl;
-    font-weight: $font-weight-semibold;
-    color: $color-text-main;
-    line-height: 1;
-  }
-
-  &__subtitle {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
-    padding-left: 34px;
-  }
-
-  &__loading,
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: $space-7 0;
-  }
 }
 
+// ── Page header ───────────────────────────────────────────────────────────────
+.tq-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  padding-bottom: $space-5;
+  margin-bottom: $space-5;
+  border-bottom: 1px solid $color-divider;
+}
 
+.tq-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.tq-page__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-bottom: $space-1;
+}
+
+.tq-page__title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-main;
+  line-height: $line-height-tight;
+  letter-spacing: -0.01em;
+}
+
+.tq-page__subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+  padding-left: 36px;
+  line-height: $line-height-normal;
+}
+
+.tq-page__loading,
+.tq-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $space-8 0;
+  gap: $space-2;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
 
 // ── Toolbar (search + tag filter) ─────────────────────────────────────────────
 .tq-toolbar {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
-  margin-bottom: $space-3;
+  gap: $space-3;
+  margin-bottom: $space-4;
 }
 
-.tq-search { max-width: 400px; }
-
+// ── Tag filter ────────────────────────────────────────────────────────────────
 .tq-tag-filter {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: $space-1;
+  gap: $space-2;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: $space-2 $space-3;
 
   &__label {
     font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-semibold;
     color: $color-text-muted;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
     margin-right: $space-1;
   }
 }
@@ -407,15 +425,16 @@ onMounted(async () => {
   align-items: center;
   font-size: 0.7rem;
   font-weight: $font-weight-medium;
-  padding: 2px 10px;
+  padding: 3px 12px;
   border-radius: $radius-full;
   border: 1.5px solid;
   background: transparent;
   cursor: pointer;
-  transition: background $transition-fast, color $transition-fast, transform $transition-fast;
+  line-height: 1.4;
+  transition: background $transition-fast, color $transition-fast, box-shadow $transition-fast;
   outline: none;
 
-  &:hover { transform: translateY(-1px); }
+  &:hover { box-shadow: $shadow-xs; }
   &:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
 
   &--clear {
@@ -426,119 +445,31 @@ onMounted(async () => {
   }
 }
 
-.tq-list {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-  margin-top: $space-3;
+// ── Tabs section ──────────────────────────────────────────────────────────────
+.tq-tabs-section {
+  border-bottom: 2px solid $color-divider;
+  margin-bottom: $space-4;
 }
 
-.tq-card {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  background: $color-surface;
-  border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  padding: $space-4;
-  cursor: pointer;
-  transition: box-shadow $transition-fast, border-color $transition-fast, transform $transition-fast;
-
-  &:hover {
-    border-color: $color-primary-light;
-    box-shadow: $shadow-sm;
-    transform: translateY(-1px);
-  }
-
-  &__status-bar {
-    flex-shrink: 0;
-    width: 4px;
-    align-self: stretch;
-    border-radius: $radius-xs;
-
-    &--active   { background: #2E8B57; }
-    &--draft    { background: #7785AC; }
-    &--paused   { background: #C77B2C; }
-    &--closed   { background: #9E9E9E; }
-    &--disabled { background: #B0583A; }
-    &--archived { background: #607D8B; }
-  }
-
-  &__body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__name {
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
-    color: $color-text-main;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
-  }
-
-  &__reason {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-regular;
-    color: $color-text-muted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: $space-1;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: $space-2;
-    margin-bottom: $space-1;
-  }
-
-  &__next {
-    display: flex;
-    align-items: center;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $color-primary;
-  }
-
-  &__no-appt {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    font-style: italic;
-  }
-
-  &__date {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-
-    &--closed { font-style: italic; }
-  }
-
-  &__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: $space-1;
-  }
-
-  &__arrow {
-    flex-shrink: 0;
-    color: $color-text-muted;
-  }
-}
-
-// ── Tab activo ────────────────────────────────────────────────────────────────
 :deep(.app-tabs) {
   .v-tab {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    letter-spacing: 0.01em;
     border-radius: $radius-md $radius-md 0 0;
-    transition: background 0.15s, color 0.15s;
+    min-width: 88px;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover:not(.v-tab--selected) {
+      background: $color-hover;
+      color: $color-text-main;
+    }
 
     &.v-tab--selected {
-      background: $color-primary-muted !important;
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+      background: $color-primary-subtle !important;
     }
   }
 }
@@ -548,19 +479,163 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   min-width: 20px;
-  height: 20px;
+  height: 18px;
   padding: 0 6px;
   margin-left: $space-2;
   border-radius: $radius-full;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: $font-weight-semibold;
-  background: rgba($color-text-muted, 0.12);
+  background: rgba($color-text-muted, 0.10);
   color: $color-text-muted;
-  transition: background 0.2s, color 0.2s;
+  transition: background $transition-fast, color $transition-fast;
 
   &--active {
     background: $color-primary;
     color: #fff;
   }
+}
+
+// ── Therapy list ──────────────────────────────────────────────────────────────
+.tq-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  margin-top: $space-4;
+}
+
+// ── Therapy card ──────────────────────────────────────────────────────────────
+.tq-card {
+  display: flex;
+  align-items: center;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xs;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow $transition-normal, border-color $transition-normal;
+
+  &:hover {
+    border-color: $color-primary-muted;
+    box-shadow: $shadow-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+// ── Status bar ────────────────────────────────────────────────────────────────
+.tq-card__status-bar {
+  flex-shrink: 0;
+  width: 4px;
+  align-self: stretch;
+
+  &--active   { background: $color-success; }
+  &--draft    { background: $color-info; }
+  &--paused   { background: $color-warning; }
+  &--closed   { background: $color-text-muted; }
+  &--disabled { background: #B0583A; }
+  &--archived { background: #607D8B; }
+}
+
+// ── Card body ─────────────────────────────────────────────────────────────────
+.tq-card__body {
+  flex: 1;
+  min-width: 0;
+  padding: $space-4;
+}
+
+// ── Patient name (primary line) ───────────────────────────────────────────────
+.tq-card__name {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: $line-height-tight;
+  margin-bottom: 2px;
+}
+
+// ── Reason for consultation ───────────────────────────────────────────────────
+.tq-card__reason {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: $line-height-normal;
+  margin-bottom: $space-2;
+}
+
+// ── Meta row ──────────────────────────────────────────────────────────────────
+.tq-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin-bottom: $space-1;
+}
+
+.tq-card__next {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  background: $color-primary-subtle;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  line-height: 1.5;
+}
+
+.tq-card__no-appt {
+  display: inline-flex;
+  align-items: center;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  background: rgba($color-text-muted, 0.08);
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  line-height: 1.5;
+}
+
+.tq-card__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  line-height: 1.5;
+
+  &--closed { font-style: italic; }
+}
+
+// ── Tag chips ─────────────────────────────────────────────────────────────────
+.tq-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+  margin-top: $space-2;
+}
+
+// ── Arrow affordance ──────────────────────────────────────────────────────────
+.tq-card__arrow-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 $space-3;
+  color: $color-text-muted;
+  opacity: 0.35;
+  transition: opacity $transition-fast, color $transition-fast;
+}
+
+.tq-card:hover .tq-card__arrow-wrap {
+  opacity: 0.75;
+  color: $color-primary;
 }
 </style>

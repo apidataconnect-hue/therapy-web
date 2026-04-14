@@ -80,6 +80,8 @@ $shadow-xs:  0 1px 2px rgba(26,37,53,0.04);
 $shadow-sm:  0 1px 4px rgba(26,37,53,0.06), 0 2px 8px rgba(26,37,53,0.04);
 $shadow-md:  0 2px 8px rgba(26,37,53,0.06), 0 4px 16px rgba(26,37,53,0.04);
 $shadow-lg:  0 8px 24px rgba(26,37,53,0.08);
+$shadow-panel: 0 1px 3px rgba(26,10,46,0.04), 0 6px 16px rgba(26,10,46,0.025);
+$shadow-inset: inset 0 1px 2px rgba(26,10,46,0.06);
 
 // ─── TRANSICIONES ────────────────────────────────────────────────────────────
 $transition-fast:   150ms ease;
@@ -101,3 +103,13 @@ $state-readonly-bg:   $color-readonly-bg;
 $state-empty-bg:      #F8FAFC;
 $state-loading-bg:    $color-primary-subtle;
 $state-disabled-bg:   $color-disabled-bg;
+
+// ─── SUPERFICIES ELEVADAS ────────────────────────────────────────────────────
+$color-surface-raised:  #FCFBFE;     // Cabeceras dentro de paneles
+$color-surface-sunken:  #F4F1F9;     // Fondos recesivos (segmented control bg)
+
+// ─── AGENDA / CALENDARIO ─────────────────────────────────────────────────────
+$cal-grid-line:          #EAE6F2;
+$cal-grid-line-minor:    #F3F0FA;
+$cal-header-bg:          #F5F3FA;   // More distinct than pure white
+$cal-today-bg:           rgba(91,42,134, 0.028);
