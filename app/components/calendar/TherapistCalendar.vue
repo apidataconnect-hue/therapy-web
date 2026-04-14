@@ -178,6 +178,11 @@ const calendarOptions = ref({
   locale: 'es',
   timeZone: 'local',
   initialView: props.initialView,
+  // Concurrent events in the timeGrid must NEVER visually overlap: each event
+  // is placed in its own sub-column. FullCalendar's built-in overlap engine
+  // detects collision clusters, assigns column indices, and computes left/width
+  // percentages for each event automatically.
+  slotEventOverlap: false,
   customButtons: {
     toggleWeekends: {
       text: props.showWeekends ? 'Ocultar finde' : 'Mostrar finde',
@@ -404,7 +409,7 @@ watch(() => props.showWeekends, (val) => {
 .fc-event-inner {
   display: flex;
   flex-direction: column;
-  padding: 6px 10px 8px;
+  padding: 5px 8px 6px;
   overflow: hidden;
   height: 100%;
   gap: 1px;
@@ -420,6 +425,7 @@ watch(() => props.showWeekends, (val) => {
   justify-content: space-between;
   gap: 4px;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .fc-event-inner__time {
@@ -493,8 +499,12 @@ watch(() => props.showWeekends, (val) => {
 /* ── Row 3: appointment type label ── */
 .fc-event-inner__type-row {
   flex-shrink: 0;
+  overflow: hidden;
 }
 
+/* Hide non-essential rows when the card is too narrow to be useful.
+   FullCalendar assigns inline width; we use container-relative sizes
+   to collapse the type row in tight spaces. */
 .fc-event-inner__type-label {
   font-size: 0.65rem;
   font-weight: 500;
